@@ -14,7 +14,6 @@ import { LoginUserDto } from './dto/login-auth.dto';
 import { GetUser } from '../decorators/get-user.decorator';
 import {
   FileFieldsInterceptor,
-  FileInterceptor,
 } from '@nestjs/platform-express';
 import { UseInterceptors } from '@nestjs/common';
 import { Auth } from '../decorators/auth.decorator';
@@ -37,8 +36,8 @@ export class AuthController {
     @Body() addressUserDto: CreateAddressDto,
     @UploadedFiles()
     files: {
-      image?: Express.Multer.File[];
-      faceImage?: Express.Multer.File[];
+      image: Express.Multer.File[];
+      faceImage: Express.Multer.File[];
     },
   ) {
     const image = files.image?.[0];

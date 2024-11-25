@@ -20,6 +20,8 @@ import { MailsService } from '../mail/mail.service';
 import { spawnSync } from 'child_process';
 import { existsSync, unlinkSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { File } from 'src/user/entities/files.entity';
+import { FaceFile } from 'src/user/entities/face_file.entity';
 
 @Injectable()
 export class AuthService {
@@ -39,108 +41,109 @@ export class AuthService {
     image: Express.Multer.File,
     faceImage: Express.Multer.File,
   ) {
-    console.log('=== Starting user creation process ===');
-    console.log('Received DTOs:', { addressUserDto, createUserDto });
-    console.log('Received files:', {
-      image: image?.originalname,
-      faceImage: faceImage?.originalname,
-    });
+    let faceEncoding;
 
     const queryRunner = this.dataSource.manager.connection.createQueryRunner();
-    console.log('Created query runner');
 
     await queryRunner.connect();
-    console.log('Connected to database');
 
     await queryRunner.startTransaction();
-    console.log('Started transaction');
 
-    // Crear archivo temporal para la imagen facial
     const tempDir = os.tmpdir();
     const tempFilePath = join(tempDir, `face-${Date.now()}.jpg`);
-    console.log('Temporary file path:', tempFilePath);
 
     try {
       const { email, password, ...rest } = createUserDto;
-      console.log('Processing user data for email:', email);
 
-      // Verificar usuario existente
-      console.log('Checking for existing user...');
       const existingUser = await queryRunner.manager.findOne(User, {
         where: { email },
       });
 
       if (existingUser) {
-        console.log('User already exists:', email);
         throw new ConflictException('User already exists');
       }
 
-      // Hash password
-      console.log('Hashing password...');
       const hashedPassword = await bcrypt.hash(password, 10);
-      console.log('Password hashed successfully');
 
-      // Subir imagen de usuario
-      console.log('Uploading user image to Cloudinary...');
-      const imageUser = await this.cloudinaryService.uploadFile(
-        image.buffer,
-        'user',
-      );
-      console.log('User image uploaded:', imageUser.url);
+      let fileImage: File | null = null;
 
-      // Crear dirección
-      console.log('Creating address record...');
+      if (image) {
+        const imageUser = await this.cloudinaryService.uploadFile(
+          image.buffer,
+          'user',
+        );
+
+        if (!imageUser || !imageUser.url) {
+          throw new ConflictException('Image not found');
+        }
+
+        fileImage = queryRunner.manager.create(File, {
+          url: imageUser.url,
+        });
+      }
+
       const newAddress = queryRunner.manager.create(Address, {
         ...addressUserDto,
       });
-      console.log('Address created:', newAddress);
 
-      // Subir imagen facial
       console.log('Uploading face image to Cloudinary...');
-      const faceImageUser = await this.cloudinaryService.uploadFile(
-        faceImage.buffer,
-        'ia-upload',
-      );
-      console.log('Face image uploaded:', faceImageUser.url);
 
-      if (!faceImageUser) {
-        console.error('Face image upload failed');
-        throw new ConflictException('Face image not found');
+      let fileImageFace: FaceFile | null = null;
+
+      if (image) {
+        const faceImageUser = await this.cloudinaryService.uploadFile(
+          faceImage.buffer,
+          'ia-upload',
+        );
+
+        if (!faceImageUser || !faceImageUser.url) {
+          throw new ConflictException('Face image not found');
+        }
+
+        fileImageFace = queryRunner.manager.create(FaceFile, {
+          url: faceImageUser.url,
+        });
       }
 
-      // Guardar buffer como archivo temporal
-      console.log('Writing face image to temporary file...');
       writeFileSync(tempFilePath, faceImage.buffer);
-      console.log('Temporary file created successfully');
 
-      // Verificar existencia del script Python
       const pythonScriptPath = join('src/auth/python/facial.py');
-      console.log('Python script path:', pythonScriptPath);
 
       if (!existsSync(pythonScriptPath)) {
         console.error('Python script not found at:', pythonScriptPath);
         throw new ConflictException('Python script not found');
       }
-      console.log('Python script found successfully');
 
-      // Ejecutar script Python
-      console.log('Executing Python script...');
       const pythonProcess = spawnSync(
         'python',
         [pythonScriptPath, 'save_face', tempFilePath],
         {
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: ['pipe', 'pipe', 'pipe'],
         },
       );
 
-      // Log detallado del proceso Python
-      console.log('Python process completed');
-      console.log('Exit code:', pythonProcess.status);
-      console.log('stdout:', pythonProcess.stdout);
-      console.log('stderr:', pythonProcess.stderr);
+      if (!pythonProcess.stdout || pythonProcess.stdout.trim().length === 0) {
+        console.error('No output from Python process');
+        throw new ConflictException('No output from face encoding process');
+      }
 
-      // Verificar errores del proceso Python
+      if (pythonProcess.stdout && pythonProcess.stdout.trim().length > 0) {
+        try {
+          console.log('Parsing face encoding output...');
+          faceEncoding = JSON.parse(pythonProcess.stdout);
+          console.log('Face encoding parsed successfully');
+        } catch (error) {
+          console.error('Error parsing face encoding:', error);
+          console.error('Raw output:', pythonProcess.stdout);
+          throw new ConflictException('Error parsing face encoding output');
+        }
+      } else {
+        console.error('No output from Python process');
+        console.error('stderr:', pythonProcess.stderr);
+        throw new ConflictException('No output from face encoding process');
+      }
+
       if (pythonProcess.stderr && pythonProcess.stderr.length > 0) {
         console.error('Python process error:', pythonProcess.stderr);
         throw new ConflictException(
@@ -163,10 +166,7 @@ export class AuthService {
         throw new ConflictException('No output from face encoding process');
       }
 
-      // Parsear el encoding facial
-      let faceEncoding;
       try {
-        console.log('Parsing face encoding output...');
         faceEncoding = JSON.parse(pythonProcess.stdout);
         console.log('Face encoding parsed successfully');
       } catch (e) {
@@ -175,69 +175,50 @@ export class AuthService {
         throw new ConflictException('Error parsing face encoding output');
       }
 
-      // Crear usuario
       console.log('Creating user record...');
       const user = queryRunner.manager.create(User, {
         ...rest,
         email,
         password: hashedPassword,
-        file: imageUser.url,
-        faceFile: faceImageUser.url,
+        file: fileImage,
+        faceFile: fileImageFace,
         address: newAddress,
         face_encoding: faceEncoding,
         is_active: false,
       });
-      console.log('User record created:', user.email);
 
-      // Generar token de verificación
-      console.log('Generating verification token...');
       const verificationToken = crypto.randomBytes(32).toString('hex');
       user.verification_token = verificationToken;
-      console.log('Verification token generated');
 
-      // Guardar usuario
-      console.log('Saving user to database...');
       await queryRunner.manager.save(user);
-      console.log('User saved successfully');
 
-      // Commit transaction
-      console.log('Committing transaction...');
       await queryRunner.commitTransaction();
-      console.log('Transaction committed successfully');
 
-      // Enviar email de verificación
-      console.log('Sending verification email...');
       await this.mailService.sendVerificationEmail({
         mailUser: user.email,
         token: verificationToken,
       });
-      console.log('Verification email sent successfully');
 
       return { email: user.email, message: 'Verification email sent' };
     } catch (error) {
       console.error('Error in create user process:', error);
-      console.error('Stack trace:', error.stack);
       await queryRunner.rollbackTransaction();
       console.log('Transaction rolled back due to error');
       throw new ConflictException(error.message || 'Error creating user');
     } finally {
-      // Limpiar archivo temporal
       try {
-        console.log('Cleaning up temporary file:', tempFilePath);
-        unlinkSync(tempFilePath);
-        console.log('Temporary file cleaned up successfully');
+        if (existsSync(tempFilePath)) {
+          unlinkSync(tempFilePath);
+        }
       } catch (err) {
         console.error('Error cleaning up temporary file:', err);
       }
 
-      // Liberar query runner
       await queryRunner.release();
-      console.log('Query runner released');
-      console.log('=== User creation process completed ===');
     }
   }
 
-  async verifyEmail(token: string): Promise<void> {
+  async verifyEmail(token: string) {
     const user = await this.usersRepository.findOne({
       where: { verification_token: token },
     });
@@ -250,6 +231,8 @@ export class AuthService {
     user.verification_token = null;
 
     await this.usersRepository.save(user);
+
+    return 'User successfully verified';
   }
 
   async logout(userId: string): Promise<void> {
@@ -340,10 +323,14 @@ export class AuthService {
       throw new ConflictException('Face validation failed');
     }
 
-    const result = JSON.parse(pythonProcess.stdout.toString());
+    try {
+      const result = JSON.parse(pythonProcess.stdout.toString());
 
-    if (!result.match) {
-      throw new ConflictException('Face does not match');
+      if (!result.match) {
+        throw new ConflictException('Face does not match');
+      }
+    } catch (error) {
+      throw new ConflictException('Error processing face verification result');
     }
 
     const tokens = await this.generateTokens(user.id, user.email);
