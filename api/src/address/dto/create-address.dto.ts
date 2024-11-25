@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsNumber,
@@ -10,9 +11,11 @@ export class CreateAddressDto {
 
   @IsNotEmpty()
   @IsNumber()
+  @Type(() => Number)
   latitude: number; 
 
   @IsNotEmpty()
   @IsNumber()
+  @Type(() => Number)
   longitude: number; 
 }

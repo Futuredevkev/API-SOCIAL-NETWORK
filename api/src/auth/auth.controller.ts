@@ -5,13 +5,17 @@ import {
   HttpCode,
   HttpStatus,
   UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { CreateAddressDto } from '../address/dto/create-address.dto';
 import { LoginUserDto } from './dto/login-auth.dto';
 import { GetUser } from '../decorators/get-user.decorator';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import { UseInterceptors } from '@nestjs/common';
 import { Auth } from '../decorators/auth.decorator';
 import { Roles } from '../enums/enum.roles';
@@ -22,14 +26,24 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('image', {}))
-  @UseInterceptors(FileInterceptor('faceImage', {}))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'image', maxCount: 1 },
+      { name: 'faceImage', maxCount: 1 },
+    ]),
+  )
   async register(
     @Body() createUserDto: CreateUserDto,
     @Body() addressUserDto: CreateAddressDto,
-    @UploadedFile('image') image: Express.Multer.File,
-    @UploadedFile('faceImage') faceImage: Express.Multer.File,
+    @UploadedFiles()
+    files: {
+      image?: Express.Multer.File[];
+      faceImage?: Express.Multer.File[];
+    },
   ) {
+    const image = files.image?.[0];
+    const faceImage = files.faceImage?.[0];
+
     return this.authService.create(
       addressUserDto,
       createUserDto,
