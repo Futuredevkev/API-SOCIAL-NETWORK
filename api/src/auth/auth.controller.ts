@@ -12,9 +12,7 @@ import { CreateUserDto } from '../user/dto/create-user.dto';
 import { CreateAddressDto } from '../address/dto/create-address.dto';
 import { LoginUserDto } from './dto/login-auth.dto';
 import { GetUser } from '../decorators/get-user.decorator';
-import {
-  FileFieldsInterceptor,
-} from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { UseInterceptors } from '@nestjs/common';
 import { Auth } from '../decorators/auth.decorator';
 import { Roles } from '../enums/enum.roles';
@@ -53,11 +51,8 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(
-    @Body() loginUserDto: LoginUserDto,
-    @Body('face_encoding') faceEncoding: string,
-  ) {
-    return this.authService.login(loginUserDto, faceEncoding);
+  async login(@Body() loginUserDto: LoginUserDto) {
+    return this.authService.login(loginUserDto);
   }
 
   @Post('logout')

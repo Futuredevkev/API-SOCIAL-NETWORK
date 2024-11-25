@@ -1,7 +1,9 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../user/entities/user.entity';
@@ -295,8 +297,11 @@ export class AuthService {
     await this.usersRepository.save(user);
   }
 
-  async login(loginDto: LoginUserDto, faceEncoding: string) {
-    const { email, password } = loginDto;
+  async login(loginDto: LoginUserDto) {
+    const { email, password, face_encoding } = loginDto;
+
+    console.log('Processing login for email:', email);
+    console.log('Face encoding received:', face_encoding ? 'yes' : 'no');
 
     const user = await this.usersRepository.findOne({
       where: { email },
@@ -309,33 +314,90 @@ export class AuthService {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      throw new NotFoundException('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
-    const pythonProcess = spawnSync('python', [
-      './face/facial.py',
-      'verify_face',
-      JSON.stringify(faceEncoding),
-      JSON.stringify(user.face_encoding),
-    ]);
+    const pythonScriptPath = join('src/auth/python/facial.py');
 
-    if (pythonProcess.status !== 0) {
-      throw new ConflictException('Face validation failed');
+    if (!existsSync(pythonScriptPath)) {
+      console.error('Python script not found at:', pythonScriptPath);
+      throw new ConflictException('Python script not found');
     }
+
+   
+    if (
+      !face_encoding ||
+      !face_encoding.encoding ||
+      !Array.isArray(face_encoding.encoding)
+    ) {
+      throw new BadRequestException('Invalid face encoding format');
+    }
+
+   
+    let storedEncoding;
 
     try {
-      const result = JSON.parse(pythonProcess.stdout.toString());
+      storedEncoding =
+        typeof user.face_encoding === 'string'
+          ? JSON.parse(user.face_encoding)
+          : user.face_encoding;
 
-      if (!result.match) {
-        throw new ConflictException('Face does not match');
+      if (!storedEncoding.encoding || !Array.isArray(storedEncoding.encoding)) {
+        throw new Error('Invalid stored face encoding structure');
       }
     } catch (error) {
-      throw new ConflictException('Error processing face verification result');
+      console.error('Stored face encoding error:', error);
+      throw new ConflictException('Invalid stored face encoding format');
+    }
+
+    
+    const pythonProcess = spawnSync(
+      'python',
+      [
+        pythonScriptPath,
+        'verify_face',
+        JSON.stringify(face_encoding.encoding),
+        JSON.stringify(storedEncoding.encoding),
+      ],
+      {
+        encoding: 'utf8',
+      },
+    );
+
+    if (pythonProcess.error) {
+      console.error('Python process error:', pythonProcess.error);
+      throw new ConflictException('Face verification process failed');
+    }
+
+    if (pythonProcess.stderr && pythonProcess.stderr.length > 0) {
+      console.error('Python error output:', pythonProcess.stderr);
+      throw new ConflictException('Face verification process error');
+    }
+
+    let result;
+
+    try {
+      result = JSON.parse(pythonProcess.stdout.trim());
+      console.log('Face verification result:', result);
+    } catch (error) {
+      console.error('Error parsing verification result:', error);
+      throw new ConflictException('Error processing verification result');
+    }
+
+    console.log('result', result);
+    console.log('storedEncoding', storedEncoding);
+
+    if (!result.match) {
+      throw new UnauthorizedException('Face verification failed');
     }
 
     const tokens = await this.generateTokens(user.id, user.email);
 
-    return { email: user.email, name: user.name, ...tokens };
+    return {
+      email: user.email,
+      name: user.name,
+      ...tokens,
+    };
   }
 
   async generateTokens(userId: string, email: string) {

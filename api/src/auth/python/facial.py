@@ -4,7 +4,19 @@ import os
 import sys
 import json
 from PIL import Image
+import traceback
 
+class NumpyEcoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.integer):
+            return int(obj)
+        return super(NumpyEcoder, self).default(obj)
 
 class FaceRecognition:
     def __init__(self, storage_path='faces'):
@@ -60,6 +72,30 @@ class FaceRecognition:
             return face_encoding.tolist()
         except Exception as e:
             raise ValueError(f"Error al guardar el encoding facial: {e}")
+        
+    def verify_face(self, input_encoding, stored_encoding):
+        """
+        Verifica si el encoding facial proporcionado coincide con el almacenado.
+        """
+        try:     
+            input_array = np.array(input_encoding)
+            stored_array = np.array(stored_encoding)    
+        
+            distance = float(np.linalg.norm(input_array - stored_array))
+            threshold = 0.6
+           
+            match = bool(distance <= threshold)
+            
+            return {
+                "status": "success",
+                "match": match,
+                "distance": distance  
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": str(e)
+            }
 
 
 def safe_json_dumps(data):
@@ -88,6 +124,11 @@ def main():
             encoding = recognizer.save_face_encoding(face_image_path)
             # Usamos la función `safe_json_dumps` para asegurar que no haya problemas al convertir a JSON
             print(safe_json_dumps({"status": "success", "encoding": encoding}))
+        elif operation == "verify_face":
+            input_encoding = sys.argv[2]
+            stored_encoding = sys.argv[3]
+            result = recognizer.verify_face(input_encoding, stored_encoding)
+            print(json.dumps({"status": "success", "match": result["match"], "distance": result["distance"]}))
         else:
             raise ValueError("Operación no soportada. Use 'save_face'.")
     except Exception as e:
