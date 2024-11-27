@@ -94,7 +94,9 @@ class FaceRecognition:
         except Exception as e:
             return {
                 "status": "error",
-                "message": str(e)
+                "message": str(e),
+                "match": False, 
+                "distance": None
             }
 
 
@@ -125,10 +127,10 @@ def main():
             # Usamos la función `safe_json_dumps` para asegurar que no haya problemas al convertir a JSON
             print(safe_json_dumps({"status": "success", "encoding": encoding}))
         elif operation == "verify_face":
-            input_encoding = sys.argv[2]
-            stored_encoding = sys.argv[3]
+            input_encoding = json.loads(sys.argv[2])
+            stored_encoding = json.loads(sys.argv[3])
             result = recognizer.verify_face(input_encoding, stored_encoding)
-            print(json.dumps({"status": "success", "match": result["match"], "distance": result["distance"]}))
+            print(json.dumps(result))
         else:
             raise ValueError("Operación no soportada. Use 'save_face'.")
     except Exception as e:

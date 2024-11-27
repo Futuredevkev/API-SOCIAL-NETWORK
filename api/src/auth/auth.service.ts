@@ -379,6 +379,15 @@ export class AuthService {
     try {
       result = JSON.parse(pythonProcess.stdout.trim());
       console.log('Face verification result:', result);
+
+      if(result.status === 'error') {
+        throw new ConflictException('face verification error: ' + result.message);
+      }
+
+      if(!result.match) {
+        throw new ConflictException('face not match, you no are the person');
+      }
+
     } catch (error) {
       console.error('Error parsing verification result:', error);
       throw new ConflictException('Error processing verification result');
