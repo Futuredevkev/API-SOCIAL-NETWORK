@@ -22,7 +22,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateAddressDto } from '../address/dto/create-address.dto';
 import { CreateReportDto } from './dto/create-report.dto';
 
-
 @Auth(Roles.ADMIN, Roles.USER)
 @Controller('user')
 export class UserController {
@@ -48,6 +47,12 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
+  }
+
+  @Get('getFavorites')
+  @HttpCode(HttpStatus.OK)
+  getFavorites(@GetUser('id') userId: string) {
+    return this.userService.getFavorites(userId);
   }
 
   @Patch()
@@ -80,6 +85,15 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   remove(@GetUser('id') userId: string) {
     return this.userService.remove(userId);
+  }
+
+  @Delete('config/remove-favorite/:favoriteUserId')
+  @HttpCode(HttpStatus.OK)
+  removeFavorite(
+    @GetUser('id') userId: string,
+    @Param('favoriteUserId') favoriteUserId: string,
+  ) {
+    return this.userService.removeFavorite(userId, favoriteUserId);
   }
 
   @Post('validation/recovery-request')
@@ -121,5 +135,14 @@ export class UserController {
     @Body() reportCreateDto: CreateReportDto,
   ) {
     return this.userService.reportedUser(userId, reportedUser, reportCreateDto);
+  }
+
+  @Post('config/favorite/add/:favoriteUserId')
+  @HttpCode(HttpStatus.OK)
+  addFavorite(
+    @GetUser('id') userId: string,
+    @Param('favoriteUserId') favoriteUserId: string,
+  ) {
+    return this.userService.addFavorite(userId, favoriteUserId);
   }
 }

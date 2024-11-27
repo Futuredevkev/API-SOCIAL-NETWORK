@@ -16,6 +16,7 @@ import { CreateAddressDto } from '../address/dto/create-address.dto';
 import { Block } from './entities/block.entity';
 import { Report } from './entities/report.entity';
 import { CreateReportDto } from './dto/create-report.dto';
+import { FavUser } from './entities/fav_user.entity';
 
 @Injectable()
 export class UserService {
@@ -30,6 +31,8 @@ export class UserService {
     private readonly blockRepository: Repository<Block>,
     @InjectRepository(Report)
     private readonly reportRepository: Repository<Report>,
+    @InjectRepository(FavUser)
+    private readonly favUserRepository: Repository<FavUser>,
     private readonly paginationService: PaginationService,
     private readonly dataSource: DataSource,
     private readonly jwtService: JwtService,
@@ -375,6 +378,83 @@ export class UserService {
     await this.reportRepository.save(report);
 
     return 'User reported successfully';
+  }
+
+  async addFavorite(userId: string, favoriteUserId: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, is_active: true },
+    });
+
+    const favoriteUser = await this.userRepository.findOne({
+      where: { id: favoriteUserId, is_active: true },
+    });
+
+    if (!user || !favoriteUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    const favorite = this.favUserRepository.create({
+      user: user,
+      favoriteUser: favoriteUser,
+    });
+
+    await this.favUserRepository.save(favorite);
+
+    return 'Favorite added successfully';
+  }
+
+  async removeFavorite(userId: string, favoriteUserId: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, is_active: true },
+    });
+
+    const favoriteUser = await this.userRepository.findOne({
+      where: { id: favoriteUserId, is_active: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const deletedFavorite = await this.favUserRepository.findOne({
+      where: { user: user, favoriteUser: favoriteUser },
+    });
+
+    if (!deletedFavorite) {
+      throw new NotFoundException('Favorite not found');
+    }
+
+    if (deletedFavorite) {
+      await this.favUserRepository.remove(deletedFavorite);
+    }
+
+    return 'Favorite removed successfully';
+  }
+
+  async getFavorites(userId: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, is_active: true },
+      relations: [
+        'favoritesInitiated',
+        'favoritesInitiated.favoriteUser',
+        'favoritesInitiated.favoriteUser.file',
+      ],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user.favoritesInitiated
+      .filter(
+        (favorite) => favorite.favoriteUser && favorite.favoriteUser.file,
+      )
+      .map((favorite) => ({
+        id: favorite.favoriteUser.id,
+        name: favorite.favoriteUser.name,
+        lastname: favorite.favoriteUser.lastname,
+        file: favorite.favoriteUser.file.url ?? '', 
+      }));
   }
 
   async requestAccountRecovery(email: string): Promise<string> {

@@ -21,6 +21,7 @@ import { LikeMessage } from '../../chat/entities/likeMessage.entity';
 import { GroupMessage } from '../../group-chat/entities/group-message.entity';
 import { GroupUser } from '../../group-chat/entities/group-user.entity';
 import { FaceFile } from './face_file.entity';
+import { FavUser } from './fav_user.entity';
 
 @Entity()
 export class User extends BaseUUIDEntity {
@@ -103,6 +104,14 @@ export class User extends BaseUUIDEntity {
     cascade: true,
   })
   faceFile?: FaceFile;
+
+  @OneToMany(() => FavUser, (favUser) => favUser.user, { cascade: true })
+  favoritesInitiated?: FavUser[];
+
+  @OneToMany(() => FavUser, (favUser) => favUser.favoriteUser, {
+    cascade: true,
+  })
+  favoritesReceived?: FavUser[];
 
   @OneToMany(() => Block, (block) => block.blockedBy, {
     cascade: true,

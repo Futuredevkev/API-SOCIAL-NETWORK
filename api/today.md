@@ -1,10 +1,7 @@
 # PROXIMA FUNCIONALIDAD
 
 
-3-usar ws-message para enviar notificaciones para quien te comente la publicacion, quien comente la misma publicacion que vos, quien te mande mensaje, y quien te de necesito, o like, o cualquiera de ellos 
-
-
-4- poner reconocimiento facial con python para entrar a la app y confirmar q eres tu
+3-usar ws-message para enviar notificaciones para quien te comente la publicacion, quien comente la misma publicacion que vos, quien te mande mensaje, y quien te de necesito, o like, o cualquiera de ellos, tambien notificaciones de las personas que tenes en favoritos para recibir sus publicaciones recientes
 
 5- Lista de intercambiadores usuarios favoritos 
 
