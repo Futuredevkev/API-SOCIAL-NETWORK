@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
@@ -17,6 +21,9 @@ import { Block } from './entities/block.entity';
 import { Report } from './entities/report.entity';
 import { CreateReportDto } from './dto/create-report.dto';
 import { FavUser } from './entities/fav_user.entity';
+import { Verification } from './entities/verification_user';
+import { ExternalVerificationService } from 'src/common/verification-user.service';
+import { FilesVerificationUser } from './entities/files-verification-user.entity';
 
 @Injectable()
 export class UserService {
@@ -25,6 +32,8 @@ export class UserService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(File)
     private readonly fileRepository: Repository<File>,
+    @InjectRepository(FilesVerificationUser)
+    private readonly filesVerificationUserRepository: Repository<FilesVerificationUser>,
     @InjectRepository(Address)
     private readonly addressRepository: Repository<Address>,
     @InjectRepository(Block)
@@ -33,7 +42,10 @@ export class UserService {
     private readonly reportRepository: Repository<Report>,
     @InjectRepository(FavUser)
     private readonly favUserRepository: Repository<FavUser>,
+    @InjectRepository(Verification)
+    private readonly verificationRepository: Repository<Verification>,
     private readonly paginationService: PaginationService,
+    private readonly externalVerificationService: ExternalVerificationService,
     private readonly dataSource: DataSource,
     private readonly jwtService: JwtService,
     private readonly mailsService: MailsService,
@@ -43,6 +55,25 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: { id: userId, is_active: true },
       relations: ['blocksReceived', 'file', 'address', 'stars'],
+      select: {
+        id: true,
+        name: true,
+        lastname: true,
+        email: true,
+        phoneNumber: true,
+        birthdate: true,
+        file: { url: true },
+        address: { city: true },
+        blocksReceived: {
+          blockedUser: {
+            id: true,
+            name: true,
+            lastname: true,
+            file: { url: true },
+          },
+        },
+        stars: { stars: true },
+      },
     });
 
     if (!user) {
@@ -73,7 +104,19 @@ export class UserService {
   async findOne(id: string): Promise<Omit<User, 'password'>> {
     const user = await this.userRepository.findOne({
       where: { id: id, is_active: true },
-      relations: ['file', 'address', 'stars'],
+      relations: ['blocksReceived', 'file', 'address', 'stars'],
+      select: {
+        id: true,
+        name: true,
+        lastname: true,
+        email: true,
+        phoneNumber: true,
+        birthdate: true,
+        file: { url: true },
+        address: { city: true },
+        blocksReceived: { blockedUser: { id: true, name: true } },
+        stars: { stars: true },
+      },
     });
 
     if (!user) {
@@ -148,9 +191,7 @@ export class UserService {
       await queryRunner.manager.save(user);
       await queryRunner.commitTransaction();
 
-      const { password: _, ...result } = user;
-
-      return result;
+      return 'Updated User';
     } catch (error) {
       await queryRunner.rollbackTransaction();
       console.log(error);
@@ -167,6 +208,12 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: { name: name, lastname: lastname, is_active: true },
       relations: ['file'],
+      select: {
+        id: true,
+        file: { url: true },
+        name: true,
+        lastname: true,
+      },
     });
 
     if (!user) {
@@ -235,7 +282,9 @@ export class UserService {
       ...adressUserDto,
     });
 
-    return await this.addressRepository.save(newAddress);
+    await this.addressRepository.save(newAddress);
+
+    return 'Address added';
   }
 
   async removeAddress(userId: string, addressId: string) {
@@ -446,14 +495,12 @@ export class UserService {
     }
 
     return user.favoritesInitiated
-      .filter(
-        (favorite) => favorite.favoriteUser && favorite.favoriteUser.file,
-      )
+      .filter((favorite) => favorite.favoriteUser && favorite.favoriteUser.file)
       .map((favorite) => ({
         id: favorite.favoriteUser.id,
         name: favorite.favoriteUser.name,
         lastname: favorite.favoriteUser.lastname,
-        file: favorite.favoriteUser.file.url ?? '', 
+        file: favorite.favoriteUser.file.url ?? '',
       }));
   }
 
@@ -507,5 +554,62 @@ export class UserService {
     await this.userRepository.save(user);
 
     return 'User successfully recovered';
+  }
+
+  async verifyIdentity(userId: string, documents: Express.Multer.File[]) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      let fileVerificationImages: FilesVerificationUser[] = [];
+
+      if (documents && documents.length > 0) {
+        fileVerificationImages = await Promise.all(
+          documents.map(async (document) => {
+            const uploadImage = await this.cloudinaryService.uploadFile(
+              document.buffer,
+              'verification-user',
+            );
+
+            return queryRunner.manager.create(FilesVerificationUser, {
+              url: uploadImage.url,
+            });
+          }),
+        );
+      }
+
+      if (fileVerificationImages.length < 2) {
+        throw new BadRequestException(
+          'Both front and back images are required',
+        );
+      }
+
+      const verification = this.verificationRepository.create({
+        user,
+        documentUrls: fileVerificationImages.map((file) => file.url),
+        verificationStatus: 'PENDING',
+      });
+
+      await this.verificationRepository.save(verification);
+
+      const externalResponse = await this.externalVerificationService.verify({
+        userId: user.id,
+        documentUrls: verification.documentUrls,
+      });
+
+      verification.verificationStatus =
+        externalResponse.status === 'approved' ? 'APPROVED' : 'REJECTED';
+      verification.externalResponse = JSON.stringify(externalResponse);
+
+      await this.verificationRepository.save(verification);
+
+      return verification;
+    } catch (error) {}
   }
 }

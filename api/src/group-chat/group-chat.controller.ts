@@ -20,7 +20,9 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { CreateSendMessageDto } from './dto/create-send-message.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('group-chat')
 @Auth(Roles.USER)
 @Controller('group-chat')
 export class GroupChatController {

@@ -18,7 +18,9 @@ import { GetUser } from 'src/decorators/get-user.decorator';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('chat')
 @Auth(Roles.USER, Roles.ADMIN)
 @Controller('chat')
 export class ChatController {

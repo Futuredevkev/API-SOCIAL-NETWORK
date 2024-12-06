@@ -1,4 +1,4 @@
-import { BaseEntityID } from "src/utils/base-entity";
+import { BaseEntityID } from "../../utils/base-entity";
 import { Entity, JoinColumn, ManyToOne } from "typeorm";
 import { User } from "./user.entity";
 

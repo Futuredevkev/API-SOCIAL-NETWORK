@@ -42,9 +42,12 @@ export class PublicationService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
+    const { latitude, longitude } = createPublicationDto;
+
     try {
       const userAuth = await queryRunner.manager.findOne(User, {
         where: { id: userId, is_active: true },
+        relations: ['address'],
       });
 
       if (!userAuth) {
@@ -86,8 +89,13 @@ export class PublicationService {
         }
       }
 
+      const userLat = userAuth.address.latitude;
+      const userLng = userAuth.address.longitude;
+
       const publication = queryRunner.manager.create(Publication, {
         ...createPublicationDto,
+        latitude: latitude || userLat,
+        longitude: longitude || userLng,
         user: userAuth,
         files: imagesPublication,
         community: community,
@@ -112,7 +120,7 @@ export class PublicationService {
       paginationDto,
       {
         where: { is_active: true, user: { is_active: true } },
-        relations: ['user', 'files', 'needLikes', 'changeLikes'],
+        relations: ['user', 'files', 'needLikes', 'changeLikes', 'address'],
         select: {
           id: true,
           title: true,
@@ -122,6 +130,8 @@ export class PublicationService {
           files: {
             url: true,
           },
+          latitude: true,
+          longitude: true,
           user: {
             id: true,
             name: true,
@@ -177,6 +187,8 @@ export class PublicationService {
           files: {
             url: true,
           },
+          latitude: true,
+          longitude: true,
           user: {
             id: true,
             name: true,
@@ -216,6 +228,8 @@ export class PublicationService {
         files: {
           url: true,
         },
+        latitude: true,
+        longitude: true,
         user: {
           id: true,
           name: true,
@@ -258,6 +272,8 @@ export class PublicationService {
           files: {
             url: true,
           },
+          latitude: true,
+          longitude: true,
           user: {
             id: true,
             name: true,
@@ -444,6 +460,8 @@ export class PublicationService {
           files: {
             url: true,
           },
+          latitude: true,
+          longitude: true,
           user: {
             id: true,
             name: true,
@@ -485,6 +503,8 @@ export class PublicationService {
           files: {
             url: true,
           },
+          latitude: true,
+          longitude: true,
           user: {
             id: true,
             name: true,
@@ -526,6 +546,8 @@ export class PublicationService {
           files: {
             url: true,
           },
+          latitude: true,
+          longitude: true,
           user: {
             id: true,
             name: true,
@@ -549,14 +571,6 @@ export class PublicationService {
       meta,
     };
   }
-
-  // sendUserChat(id: number) {
-  //   return `This action removes a #${id} publication`;
-  // }
-
-  // speakUserPublication(id: number) {
-  //   return `This action removes a #${id} publication`;
-  // }
 
   // Private Methods
 

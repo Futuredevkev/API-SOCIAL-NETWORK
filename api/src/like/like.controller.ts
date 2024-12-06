@@ -12,7 +12,9 @@ import { LikeService } from './like.service';
 import { GetUser } from 'src/decorators/get-user.decorator';
 import { Auth } from 'src/decorators/auth.decorator';
 import { Roles } from 'src/enums/enum.roles';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('like')
 @Auth(Roles.USER, Roles.ADMIN)
 @Controller('like')
 export class LikeController {

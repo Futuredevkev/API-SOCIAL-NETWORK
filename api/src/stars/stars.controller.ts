@@ -14,7 +14,9 @@ import { UpdateStarDto } from './dto/update-star.dto';
 import { GetUser } from 'src/decorators/get-user.decorator';
 import { Auth } from 'src/decorators/auth.decorator';
 import { Roles } from 'src/enums/enum.roles';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('stars')
 @Auth(Roles.ADMIN, Roles.USER)
 @Controller('stars')
 export class StarsController {

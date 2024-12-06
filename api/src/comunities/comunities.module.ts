@@ -25,6 +25,7 @@ import { MessageVideoUploadStrategy } from 'src/cloudinary/strategy/message-vide
 import { MessageImageUploadStrategy } from 'src/cloudinary/strategy/message-image-strategy copy';
 import { MessageAudioUploadStrategy } from 'src/cloudinary/strategy/message-audioUpload-strategy';
 import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
+import { VerificationUserStrategy } from 'src/cloudinary/strategy/verification-user-strategy';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
     ComunitiesService,
     MessageAudioUploadStrategy,
     IAImageStrategy,
+    VerificationUserStrategy,
   ],
 })
 export class ComunitiesModule {}

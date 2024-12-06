@@ -19,6 +19,7 @@ import { MessageImageUploadStrategy } from 'src/cloudinary/strategy/message-imag
 import { MessageAudioUploadStrategy } from 'src/cloudinary/strategy/message-audioUpload-strategy';
 import { PaginationGroupChatService } from 'src/common/pagination-Group.service';
 import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
+import { VerificationUserStrategy } from 'src/cloudinary/strategy/verification-user-strategy';
 
 @Module({
   imports: [
@@ -44,7 +45,8 @@ import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
     MessageVideoUploadStrategy,
     MessageImageUploadStrategy,
     MessageAudioUploadStrategy,
-    IAImageStrategy
+    IAImageStrategy,
+    VerificationUserStrategy,
   ],
   exports: [GroupChatService],
 })

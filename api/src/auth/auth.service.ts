@@ -201,7 +201,7 @@ export class AuthService {
         token: verificationToken,
       });
 
-      return { email: user.email, message: 'Verification email sent' };
+      return { email: user.email, message: 'user created' };
     } catch (error) {
       console.error('Error in create user process:', error);
       await queryRunner.rollbackTransaction();
@@ -251,7 +251,7 @@ export class AuthService {
     await this.usersRepository.save(user);
   }
 
-  async forgotPassword(mailUser: string): Promise<void> {
+  async forgotPassword(mailUser: string) {
     const user = await this.usersRepository.findOne({
       where: { email: mailUser },
     });
@@ -272,6 +272,8 @@ export class AuthService {
       mailUser: user.email,
       token: resetToken,
     });
+
+    return { message: 'email sending' };
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
@@ -324,7 +326,6 @@ export class AuthService {
       throw new ConflictException('Python script not found');
     }
 
-   
     if (
       !face_encoding ||
       !face_encoding.encoding ||
@@ -333,7 +334,6 @@ export class AuthService {
       throw new BadRequestException('Invalid face encoding format');
     }
 
-   
     let storedEncoding;
 
     try {
@@ -350,7 +350,6 @@ export class AuthService {
       throw new ConflictException('Invalid stored face encoding format');
     }
 
-    
     const pythonProcess = spawnSync(
       'python',
       [
@@ -380,14 +379,15 @@ export class AuthService {
       result = JSON.parse(pythonProcess.stdout.trim());
       console.log('Face verification result:', result);
 
-      if(result.status === 'error') {
-        throw new ConflictException('face verification error: ' + result.message);
+      if (result.status === 'error') {
+        throw new ConflictException(
+          'face verification error: ' + result.message,
+        );
       }
 
-      if(!result.match) {
+      if (!result.match) {
         throw new ConflictException('face not match, you no are the person');
       }
-
     } catch (error) {
       console.error('Error parsing verification result:', error);
       throw new ConflictException('Error processing verification result');
@@ -400,13 +400,7 @@ export class AuthService {
       throw new UnauthorizedException('Face verification failed');
     }
 
-    const tokens = await this.generateTokens(user.id, user.email);
-
-    return {
-      email: user.email,
-      name: user.name,
-      ...tokens,
-    };
+    return 'Inicio de sección correcta';
   }
 
   async generateTokens(userId: string, email: string) {

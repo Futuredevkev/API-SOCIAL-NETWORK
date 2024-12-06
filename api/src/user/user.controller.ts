@@ -18,10 +18,12 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 import { Auth } from '../decorators/auth.decorator';
 import { Roles } from '../enums/enum.roles';
 import { GetUser } from '../decorators/get-user.decorator';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CreateAddressDto } from '../address/dto/create-address.dto';
 import { CreateReportDto } from './dto/create-report.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('user')
 @Auth(Roles.ADMIN, Roles.USER)
 @Controller('user')
 export class UserController {
@@ -79,6 +81,15 @@ export class UserController {
     @Body() addressUserDto: CreateAddressDto,
   ) {
     return this.userService.addAdress(userId, addressUserDto);
+  }
+
+  @Post('config/verify-identity')
+  @UseInterceptors(FilesInterceptor('document', 2, {}))
+  async verifyIdentity(
+    @GetUser('id') userId: string,
+    @UploadedFile() documents: Express.Multer.File[],
+  ) {
+    return this.userService.verifyIdentity(userId, documents);
   }
 
   @Delete()

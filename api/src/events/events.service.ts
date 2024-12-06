@@ -3,7 +3,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity';
-import { Repository } from 'typeorm'
+import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { Community } from 'src/comunities/entities/comunity.entity';
 import { FileEvent } from './entities/file.event.entity';
@@ -258,6 +258,15 @@ export class EventsService {
         where: { is_active: true, user: { id: userAuth.id, is_active: true } },
         relations: ['user'],
         select: {
+          address: true,
+          city: true,
+          description: true,
+          file: {
+            url: true,
+          },
+          title: true,
+          start_date: true,
+          end_date: true,
           user: {
             name: true,
             lastname: true,
@@ -313,6 +322,15 @@ export class EventsService {
         where: { is_active: false, user: { id: userAuth.id, is_active: true } },
         relations: ['user'],
         select: {
+          address: true,
+          city: true,
+          description: true,
+          file: {
+            url: true,
+          },
+          title: true,
+          start_date: true,
+          end_date: true,
           user: {
             name: true,
             lastname: true,

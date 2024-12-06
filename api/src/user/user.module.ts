@@ -24,10 +24,23 @@ import { MessageImageUploadStrategy } from 'src/cloudinary/strategy/message-imag
 import { MessageAudioUploadStrategy } from 'src/cloudinary/strategy/message-audioUpload-strategy';
 import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
 import { FavUser } from './entities/fav_user.entity';
+import { VerificationUserStrategy } from 'src/cloudinary/strategy/verification-user-strategy';
+import { Verification } from './entities/verification_user';
+import { FilesVerificationUser } from './entities/files-verification-user.entity';
+import { ExternalVerificationService } from 'src/common/verification-user.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, File, Address, Block, Report, FavUser]),
+    TypeOrmModule.forFeature([
+      User,
+      File,
+      Address,
+      Block,
+      Report,
+      FavUser,
+      Verification,
+      FilesVerificationUser,
+    ]),
     CloudinaryModule,
     MailsModule,
     JwtModule.registerAsync({
@@ -44,6 +57,7 @@ import { FavUser } from './entities/fav_user.entity';
     UserService,
     PaginationService,
     CloudinaryService,
+    ExternalVerificationService,
     PostImageUploadStrategy,
     UserImageUploadStrategy,
     CommentImageUploadStrategy,
@@ -53,7 +67,8 @@ import { FavUser } from './entities/fav_user.entity';
     MessageVideoUploadStrategy,
     MessageImageUploadStrategy,
     MessageAudioUploadStrategy,
-    IAImageStrategy
+    IAImageStrategy,
+    VerificationUserStrategy,
   ],
   exports: [UserService],
 })

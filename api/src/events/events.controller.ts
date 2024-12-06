@@ -18,7 +18,9 @@ import { Roles } from 'src/enums/enum.roles';
 import { GetUser } from 'src/decorators/get-user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('events')
 @Auth(Roles.ADMIN, Roles.USER)
 @Controller('events')
 export class EventsController {

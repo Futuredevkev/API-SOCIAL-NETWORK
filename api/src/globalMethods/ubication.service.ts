@@ -7,8 +7,8 @@ export class UbicationService {
     userLat: number,
     userLng: number,
   ): boolean {
-    const publicationLat = publication.user.address.latitude;
-    const publicationLng = publication.user.address.longitude;
+    const publicationLat = publication.latitude;
+    const publicationLng = publication.longitude;
 
     const distance = getDistance(
       { latitude: userLat, longitude: userLng },

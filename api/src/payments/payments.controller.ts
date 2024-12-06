@@ -15,7 +15,9 @@ import { GetUser } from 'src/decorators/get-user.decorator';
 import { Auth } from 'src/decorators/auth.decorator';
 import { Roles } from 'src/enums/enum.roles';
 import { PaypalService } from 'src/paypal/paypal.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('payments')
 @Auth(Roles.ADMIN, Roles.USER)
 @Controller('payments')
 export class PaymentsController {

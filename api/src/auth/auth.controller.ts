@@ -4,7 +4,6 @@ import {
   Post,
   HttpCode,
   HttpStatus,
-  UploadedFile,
   UploadedFiles,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -16,7 +15,9 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { UseInterceptors } from '@nestjs/common';
 import { Auth } from '../decorators/auth.decorator';
 import { Roles } from '../enums/enum.roles';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

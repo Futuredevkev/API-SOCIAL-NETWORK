@@ -172,7 +172,7 @@ export class CommentsService {
           is_active: true,
           user: { is_active: true },
         },
-        relations: ['user'],
+        relations: ['user', 'file'],
         select: {
           content: true,
           file: {

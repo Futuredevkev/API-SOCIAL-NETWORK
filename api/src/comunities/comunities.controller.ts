@@ -21,7 +21,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { createRoleDto } from './dto/create-role.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('comunities')
 @Auth(Roles.ADMIN, Roles.USER)
 @Controller('comunities')
 export class ComunitiesController {

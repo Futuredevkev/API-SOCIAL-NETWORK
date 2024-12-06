@@ -12,6 +12,7 @@ import { MessageImageUploadStrategy } from './strategy/message-image-strategy co
 import { MessageVideoUploadStrategy } from './strategy/message-videoUpload-strategy';
 import { MessageAudioUploadStrategy } from './strategy/message-audioUpload-strategy';
 import { IAImageStrategy } from './strategy/ia-image-strategy';
+import { VerificationUserStrategy } from './strategy/verification-user-strategy';
 
 type StrategyType =
   | 'user'
@@ -23,7 +24,8 @@ type StrategyType =
   | 'messageFiles'
   | 'video-message'
   | 'audio-message'
-  | 'ia-upload';
+  | 'ia-upload'
+  | 'verification-user';
 
 @Injectable()
 export class CloudinaryService {
@@ -37,7 +39,8 @@ export class CloudinaryService {
     private readonly messageFilesUploadStrategy: MessageImageUploadStrategy,
     private readonly messageVideoUploadStrategy: MessageVideoUploadStrategy,
     private readonly messageAudioUploadStrategy: MessageAudioUploadStrategy,
-    private readonly iaUploadStrategy: IAImageStrategy
+    private readonly verificationUserUploadStrategy: VerificationUserStrategy,
+    private readonly iaUploadStrategy: IAImageStrategy,
   ) {}
 
   async uploadFile(
@@ -76,6 +79,9 @@ export class CloudinaryService {
         break;
       case 'ia-upload':
         strategy = this.iaUploadStrategy;
+        break;
+      case 'verification-user':
+        strategy = this.verificationUserUploadStrategy;
         break;
       default:
         throw new BadRequestException('Invalid upload type');

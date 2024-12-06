@@ -5,7 +5,9 @@ import { StatusPay } from 'src/enums/enum-status-pay';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { Auth } from 'src/decorators/auth.decorator';
 import { Roles } from 'src/enums/enum.roles';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('orders')
 @Auth(Roles.ADMIN, Roles.USER)
 @Controller('orders')
 export class OrdersController {

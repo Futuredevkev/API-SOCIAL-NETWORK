@@ -21,6 +21,12 @@ export class Publication extends BaseUUIDEntity {
   @Column({ type: 'enum', enum: ItemTag })
   tag!: ItemTag;
 
+  @Column({ type: 'float' })
+  latitude: number;
+
+  @Column({ type: 'float' })
+  longitude: number;
+
   @Column({ type: 'enum', enum: categoryTag })
   category!: categoryTag;
 
@@ -53,6 +59,4 @@ export class Publication extends BaseUUIDEntity {
   })
   @JoinColumn()
   community?: Community;
-
-  
 }

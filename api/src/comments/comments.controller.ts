@@ -18,7 +18,9 @@ import { Roles } from 'src/enums/enum.roles';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { GetUser } from 'src/decorators/get-user.decorator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('comments')
 @Auth(Roles.ADMIN, Roles.USER)
 @Controller('comments')
 export class CommentsController {

@@ -359,15 +359,36 @@ export class ComunitiesService {
       paginationDto,
       {
         where: { is_active: true, user: { is_active: true } },
-        relations: ['userCommunities'],
+        relations: ['userCommunities', 'user', 'file'],
+        select: {
+          created_at: true,
+          description: true,
+          events: true,
+          file: {
+            url: true,
+          },
+          publications: true,
+          title: true,
+          userCommunities: true,
+          user: {
+            name: true,
+            lastname: true,
+            file: {
+              url: true,
+            },
+          },
+        },
       },
     );
 
-    if (!comunities) {
+    if (!comunities?.data.length) {
       throw new BadRequestException('Communities not found');
     }
 
-    return comunities;
+    return {
+      data: comunities.data,
+      meta: comunities.meta,
+    };
   }
 
   async allCommunitiesByUser(userId: string, paginationDto: PaginationDto) {
@@ -384,21 +405,60 @@ export class ComunitiesService {
       paginationDto,
       {
         where: { is_active: true, user: { id: authUser.id, is_active: true } },
-        relations: ['userCommunities'],
+        relations: ['userCommunities', 'user', 'file'],
+        select: {
+          created_at: true,
+          description: true,
+          events: true,
+          file: {
+            url: true,
+          },
+          publications: true,
+          title: true,
+          userCommunities: true,
+          user: {
+            name: true,
+            lastname: true,
+            file: {
+              url: true,
+            },
+          },
+        },
       },
     );
 
-    if (!comunities) {
+    if (!comunities?.data.length) {
       throw new BadRequestException('Communities not found');
     }
 
-    return comunities;
+    return {
+      data: comunities.data,
+      meta: comunities.meta,
+    };
   }
 
   async getCommunityById(communityId: string) {
     const community = await this.comunityRepository.findOne({
       where: { id: communityId, is_active: true, user: { is_active: true } },
-      relations: ['userCommunities'],
+      relations: ['userCommunities', 'user', 'file'],
+      select: {
+        created_at: true,
+        description: true,
+        events: true,
+        file: {
+          url: true,
+        },
+        publications: true,
+        title: true,
+        userCommunities: true,
+        user: {
+          name: true,
+          lastname: true,
+          file: {
+            url: true,
+          },
+        },
+      },
     });
 
     if (!community) {

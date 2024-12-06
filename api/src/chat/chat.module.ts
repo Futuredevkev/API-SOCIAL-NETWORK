@@ -20,6 +20,7 @@ import { LikeMessage } from './entities/likeMessage.entity';
 import { PaginationChatService } from 'src/common/pagination-Chat.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
+import { VerificationUserStrategy } from 'src/cloudinary/strategy/verification-user-strategy';
 
 
 @Module({
@@ -42,6 +43,7 @@ import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
     MessageImageUploadStrategy,
     MessageAudioUploadStrategy,
     IAImageStrategy,
+    VerificationUserStrategy,
   ],
   exports: [ChatService],
 })

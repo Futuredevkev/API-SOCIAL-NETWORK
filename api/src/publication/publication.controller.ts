@@ -22,7 +22,9 @@ import { ItemTag } from 'src/enums/enum.tags';
 import { Auth } from 'src/decorators/auth.decorator';
 import { Roles } from 'src/enums/enum.roles';
 import { categoryTag } from 'src/enums/enum.category';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('publication')
 @Auth(Roles.ADMIN, Roles.USER)
 @Controller('publication')
 export class PublicationController {
