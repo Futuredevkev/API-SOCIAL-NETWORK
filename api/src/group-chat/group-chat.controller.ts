@@ -35,8 +35,8 @@ export class GroupChatController {
     @Body('membersId') membersId: string[],
   ) {
     return this.groupChatService.createGroup(
-      userId,
       createGroupChatDto,
+      userId,
       membersId,
     );
   }

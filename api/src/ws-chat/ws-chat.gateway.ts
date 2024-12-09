@@ -35,6 +35,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly groupChatWsController: GroupChatWsController,
   ) {}
 
+
   afterInit(server: Server) {
     console.log('Chat gateway initialized');
   }

@@ -22,8 +22,8 @@ export class GroupChatWsController {
   ) {
     try {
       const newGroup = await this.groupChatService.createGroup(
-        payload.userId,
         payload.createGroupChatDto,
+        payload.userId,
         payload.membersIds,
       );
       server.emit('groupCreated', newGroup);
@@ -166,8 +166,8 @@ export class GroupChatWsController {
     try {
       await this.groupChatService.deleteMessage(
         payload.messageId,
-        payload.userId,
         payload.groupId,
+        payload.userId,
       );
       server.emit('messageDeleted', { messageId: payload.messageId });
     } catch (error) {

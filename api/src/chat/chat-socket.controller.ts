@@ -63,10 +63,10 @@ export class ChatWsController {
         content: payload.newContent,
       };
       const message = await this.chatService.editMessage(
-        payload.userId,
-        payload.chatId,
         payload.messageId,
         updateMessageDto,
+        payload.userId,
+        payload.chatId,
         payload.files,
       );
       server.emit('messageEdited', message);
@@ -128,7 +128,10 @@ export class ChatWsController {
     server: Server,
   ) {
     try {
-      const message = await this.chatService.markAsRead(payload.messageId);
+      const message = await this.chatService.markAsRead(
+        payload.messageId,
+        payload.userId,
+      );
       server.emit('messageRead', message);
     } catch (error) {
       client.emit('error', { message: error.message });

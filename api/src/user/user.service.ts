@@ -563,6 +563,7 @@ export class UserService {
 
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } });
+      
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -584,15 +585,20 @@ export class UserService {
         );
       }
 
-      if (fileVerificationImages.length < 2) {
+      if (!fileVerificationImages || fileVerificationImages.length !== 3) {
         throw new BadRequestException(
-          'Both front and back images are required',
+          'Front, back, and face images are required',
         );
       }
 
+      const [file_front, file_back, faceFileUrl] = fileVerificationImages.map(
+        (file) => file.url,
+      );
+
       const verification = this.verificationRepository.create({
         user,
-        documentUrls: fileVerificationImages.map((file) => file.url),
+        documentUrls: [file_front, file_back],
+        faceUrl: faceFileUrl,
         verificationStatus: 'PENDING',
       });
 
@@ -601,6 +607,7 @@ export class UserService {
       const externalResponse = await this.externalVerificationService.verify({
         userId: user.id,
         documentUrls: verification.documentUrls,
+        faceFileUrl: verification.faceUrl,
       });
 
       verification.verificationStatus =
@@ -610,6 +617,12 @@ export class UserService {
       await this.verificationRepository.save(verification);
 
       return verification;
-    } catch (error) {}
+    } catch (error) {
+      console.error('Error in verifyIdentity:', error);
+      await queryRunner.rollbackTransaction();
+      console.log(error);
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

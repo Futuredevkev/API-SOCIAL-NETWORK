@@ -400,7 +400,8 @@ export class AuthService {
       throw new UnauthorizedException('Face verification failed');
     }
 
-    return 'Inicio de sección correcta';
+    const tokens = await this.generateTokens(user.id, user.email);
+    return { message: 'Login successful', ...tokens };
   }
 
   async generateTokens(userId: string, email: string) {

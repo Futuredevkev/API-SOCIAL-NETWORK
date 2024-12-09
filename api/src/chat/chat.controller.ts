@@ -36,12 +36,12 @@ export class ChatController {
   @Post('send/:chatId')
   @UseInterceptors(FilesInterceptor('files', 10, {}))
   async sendMessage(
+    @Param('chatId') chatId: string,
     @GetUser('id') userId: string,
     @Body() createChatDto: CreateChatDto,
-    @Param('chatId') chatId: string,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return this.chatService.sendMessage(userId, chatId, createChatDto, files);
+    return this.chatService.sendMessage(chatId, userId, createChatDto, files);
   }
 
   @Post('like/:messageId')
@@ -111,33 +111,36 @@ export class ChatController {
   @Patch('edit/:chatId/:messageId')
   @UseInterceptors(FilesInterceptor('files', 10, {}))
   async editMessage(
-    @Param('chatId') chatId: string,
     @Param('messageId') messageId: string,
     @Body() updateMessageDto: UpdateMessageDto,
     @GetUser('id') userId: string,
+    @Param('chatId') chatId: string,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     return this.chatService.editMessage(
-      userId,
-      chatId,
       messageId,
       updateMessageDto,
+      userId,
+      chatId,
       files,
     );
   }
 
   @Patch('read/:messageId')
-  async markAsRead(@Param('messageId') messageId: string) {
-    return this.chatService.markAsRead(messageId);
+  async markAsRead(
+    @Param('messageId') messageId: string,
+    @GetUser('id') userId: string,
+  ) {
+    return this.chatService.markAsRead(messageId, userId);
   }
 
   @Delete('deleteMessage/:chatId/:messageId')
   async deleteMessage(
+    @GetUser('id') userId: string,
     @Param('chatId') chatId: string,
     @Param('messageId') messageId: string,
-    @GetUser('id') userId: string,
   ) {
-    return this.chatService.deleteMessage(chatId, messageId, userId);
+    return this.chatService.deleteMessage(userId, chatId, messageId);
   }
 
   @Delete('deleteChat/:chatId')

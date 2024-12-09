@@ -40,8 +40,8 @@ export class GroupChatService {
     private readonly paginationGroupChatService: PaginationGroupChatService,
   ) {}
   async createGroup(
-    userId: string,
     createGroupChatDto: CreateGroupChatDto,
+    userId: string,
     membersId: string[],
   ) {
     const { name, description } = createGroupChatDto;

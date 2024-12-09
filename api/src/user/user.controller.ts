@@ -84,7 +84,7 @@ export class UserController {
   }
 
   @Post('config/verify-identity')
-  @UseInterceptors(FilesInterceptor('document', 2, {}))
+  @UseInterceptors(FilesInterceptor('documents', 3, {}))
   async verifyIdentity(
     @GetUser('id') userId: string,
     @UploadedFile() documents: Express.Multer.File[],

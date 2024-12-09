@@ -69,8 +69,8 @@ export class ChatService {
   }
 
   async sendMessage(
-    userId: string,
     chatId: string,
+    userId: string,
     createChatDto: CreateChatDto,
     files: Express.Multer.File[],
   ): Promise<Message> {
@@ -156,10 +156,10 @@ export class ChatService {
   }
 
   async editMessage(
-    userId: string,
-    chatId: string,
     messageId: string,
     updateMessageDto: UpdateMessageDto,
+    userId: string,
+    chatId: string,
     files: Express.Multer.File[],
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -272,7 +272,7 @@ export class ChatService {
     }
   }
 
-  async deleteMessage(chatId: string, messageId: string, userId: string) {
+  async deleteMessage(userId: string, chatId: string, messageId: string) {
     const chat = await this.chatRepository.findOne({
       where: { id: chatId, is_active: true },
     });
@@ -661,14 +661,29 @@ export class ChatService {
     return hiddenMessages;
   }
 
-  async markAsRead(messageId: string): Promise<Message> {
+  async markAsRead(messageId: string, userId: string): Promise<Message> {
+    
+    const userReceptorMessage = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!userReceptorMessage) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
+    
     const message = await this.messageRepository.findOne({
       where: { id: messageId, is_active: true },
+      relations: ['receiver'],
     });
 
     if (!message) {
       throw new NotFoundException(`Message with id ${messageId} not found`);
     }
+    
+    if(message.receiver.id !== userReceptorMessage.id) {
+      throw new UnauthorizedException(
+        `You don't have permission to mark this message as read`,
+      );
+    }
+
 
     const messageIsRead = await this.messageRepository.preload({
       id: message.id,

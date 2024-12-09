@@ -10,6 +10,9 @@ export class Verification extends BaseUUIDEntity {
   @Column({ type: 'simple-array', nullable: true })
   documentUrls: string[];
 
+  @Column({})
+  faceUrl: string;
+
   @Column({ type: 'text', nullable: true })
   verificationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
 
