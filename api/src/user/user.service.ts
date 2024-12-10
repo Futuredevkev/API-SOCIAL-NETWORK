@@ -563,7 +563,7 @@ export class UserService {
 
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } });
-      
+
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -578,9 +578,13 @@ export class UserService {
               'verification-user',
             );
 
-            return queryRunner.manager.create(FilesVerificationUser, {
+            const file = queryRunner.manager.create(FilesVerificationUser, {
               url: uploadImage.url,
+              user,
             });
+
+            await queryRunner.manager.save(file); 
+            return file;
           }),
         );
       }

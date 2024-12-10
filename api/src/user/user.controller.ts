@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Query,
+  UploadedFiles,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -87,7 +88,7 @@ export class UserController {
   @UseInterceptors(FilesInterceptor('documents', 3, {}))
   async verifyIdentity(
     @GetUser('id') userId: string,
-    @UploadedFile() documents: Express.Multer.File[],
+    @UploadedFiles() documents: Express.Multer.File[],
   ) {
     return this.userService.verifyIdentity(userId, documents);
   }

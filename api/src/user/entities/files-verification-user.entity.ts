@@ -2,7 +2,7 @@ import { User } from './user.entity';
 import { BaseUUIDEntity } from '../../utils/base-entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
-@Entity({ name: 'fileDocumentsVerification' })
+@Entity()
 export class FilesVerificationUser extends BaseUUIDEntity {
   @Column({ type: 'text', nullable: false })
   url!: string;
