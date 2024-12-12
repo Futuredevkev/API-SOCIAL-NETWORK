@@ -13,6 +13,7 @@ import { MessageVideoUploadStrategy } from './strategy/message-videoUpload-strat
 import { MessageAudioUploadStrategy } from './strategy/message-audioUpload-strategy';
 import { IAImageStrategy } from './strategy/ia-image-strategy';
 import { VerificationUserStrategy } from './strategy/verification-user-strategy';
+import { StreamImagePreviewStrategy } from './strategy/stream-image-preview-strategy';
 
 type StrategyType =
   | 'user'
@@ -25,7 +26,8 @@ type StrategyType =
   | 'video-message'
   | 'audio-message'
   | 'ia-upload'
-  | 'verification-user';
+  | 'verification-user'
+  | 'stream-image-preview';
 
 @Injectable()
 export class CloudinaryService {
@@ -40,6 +42,7 @@ export class CloudinaryService {
     private readonly messageVideoUploadStrategy: MessageVideoUploadStrategy,
     private readonly messageAudioUploadStrategy: MessageAudioUploadStrategy,
     private readonly verificationUserUploadStrategy: VerificationUserStrategy,
+    private readonly streamImageUploadStrategy: StreamImagePreviewStrategy,
     private readonly iaUploadStrategy: IAImageStrategy,
   ) {}
 
@@ -82,6 +85,9 @@ export class CloudinaryService {
         break;
       case 'verification-user':
         strategy = this.verificationUserUploadStrategy;
+        break;
+      case 'stream-image-preview':
+        strategy = this.streamImageUploadStrategy;
         break;
       default:
         throw new BadRequestException('Invalid upload type');

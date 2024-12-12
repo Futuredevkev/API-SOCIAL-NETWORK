@@ -4,5 +4,5 @@
 
 3- probar mercadopago que funcione
 
-4- arreglar que ande la api de DNI Y QUE ME GUARDE LAS IMAGENES EN LA RELACION DE VERIFICATIONFILE
+5- arreglar que ande la api de DNI Y QUE ME GUARDE LAS IMAGENES EN LA RELACION DE VERIFICATION FILE
 -------------------------------------------------------------------

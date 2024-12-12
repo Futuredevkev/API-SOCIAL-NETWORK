@@ -20,6 +20,7 @@ import { MessageImageUploadStrategy } from 'src/cloudinary/strategy/message-imag
 import { MessageAudioUploadStrategy } from 'src/cloudinary/strategy/message-audioUpload-strategy';
 import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
 import { VerificationUserStrategy } from 'src/cloudinary/strategy/verification-user-strategy';
+import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image-preview-strategy';
 
 
 @Module({
@@ -48,6 +49,7 @@ import { VerificationUserStrategy } from 'src/cloudinary/strategy/verification-u
     MessageAudioUploadStrategy,
     IAImageStrategy,
     VerificationUserStrategy,
+    StreamImagePreviewStrategy
   ],
 })
 export class ResponsesModule {}

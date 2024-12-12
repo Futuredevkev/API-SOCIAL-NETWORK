@@ -21,6 +21,7 @@ import { PaginationChatService } from 'src/common/pagination-Chat.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
 import { VerificationUserStrategy } from 'src/cloudinary/strategy/verification-user-strategy';
+import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image-preview-strategy';
 
 
 @Module({
@@ -44,6 +45,7 @@ import { VerificationUserStrategy } from 'src/cloudinary/strategy/verification-u
     MessageAudioUploadStrategy,
     IAImageStrategy,
     VerificationUserStrategy,
+    StreamImagePreviewStrategy,
   ],
   exports: [ChatService],
 })

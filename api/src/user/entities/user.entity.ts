@@ -24,6 +24,7 @@ import { FaceFile } from './face_file.entity';
 import { FavUser } from './fav_user.entity';
 import { Verification } from './verification_user';
 import { FilesVerificationUser } from './files-verification-user.entity';
+import { Stream } from 'src/stream/entities/stream.entity';
 
 @Entity()
 export class User extends BaseUUIDEntity {
@@ -174,6 +175,9 @@ export class User extends BaseUUIDEntity {
 
   @OneToMany(() => Order, (order) => order.user)
   orders?: Order[];
+
+  @OneToMany(() => Stream, (stream) => stream.user)
+  streams?: Stream[];
 
   @OneToMany(() => Community, (community) => community.user)
   communitiesCreated?: Community[];

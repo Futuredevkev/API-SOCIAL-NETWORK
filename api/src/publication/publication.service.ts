@@ -47,7 +47,7 @@ export class PublicationService {
     try {
       const userAuth = await queryRunner.manager.findOne(User, {
         where: { id: userId, is_active: true },
-        relations: ['address'],
+        relations: ['address', 'file'],
       });
 
       if (!userAuth) {
@@ -155,7 +155,7 @@ export class PublicationService {
   ) {
     const authUser = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ['address'],
+      relations: ['address', 'file'],
     });
 
     if (!authUser) {
@@ -251,6 +251,7 @@ export class PublicationService {
   async findAllUserPublication(userId: string, paginationDto: PaginationDto) {
     const userAuth = await this.userRepository.findOne({
       where: { id: userId, is_active: true },
+      relations: ['file'],
     });
 
     if (!userAuth) {

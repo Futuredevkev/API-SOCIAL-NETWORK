@@ -28,6 +28,7 @@ import { VerificationUserStrategy } from 'src/cloudinary/strategy/verification-u
 import { Verification } from './entities/verification_user';
 import { FilesVerificationUser } from './entities/files-verification-user.entity';
 import { ExternalVerificationService } from 'src/common/verification-user.service';
+import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image-preview-strategy';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { ExternalVerificationService } from 'src/common/verification-user.servic
     MessageAudioUploadStrategy,
     IAImageStrategy,
     VerificationUserStrategy,
+    StreamImagePreviewStrategy,
   ],
   exports: [UserService],
 })

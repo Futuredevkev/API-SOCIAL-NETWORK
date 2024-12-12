@@ -19,6 +19,7 @@ import { WsChatModule } from './ws-chat/ws-chat.module';
 import { GroupChatModule } from './group-chat/group-chat.module';
 import { CleanUpModule } from './cleanup_chats/cleanup.module';
 import { deEventsModule } from './events_desactivated/de-events.module';
+import { StreamModule } from './stream/stream.module';
 
 
 
@@ -50,6 +51,7 @@ import { deEventsModule } from './events_desactivated/de-events.module';
     GroupChatModule,
     CleanUpModule,
     deEventsModule,
+    StreamModule,
   ],
   controllers: [],
 })
