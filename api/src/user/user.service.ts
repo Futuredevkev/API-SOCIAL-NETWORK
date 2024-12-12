@@ -21,9 +21,6 @@ import { Block } from './entities/block.entity';
 import { Report } from './entities/report.entity';
 import { CreateReportDto } from './dto/create-report.dto';
 import { FavUser } from './entities/fav_user.entity';
-import { Verification } from './entities/verification_user';
-import { ExternalVerificationService } from 'src/common/verification-user.service';
-import { FilesVerificationUser } from './entities/files-verification-user.entity';
 
 @Injectable()
 export class UserService {
@@ -32,8 +29,6 @@ export class UserService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(File)
     private readonly fileRepository: Repository<File>,
-    @InjectRepository(FilesVerificationUser)
-    private readonly filesVerificationUserRepository: Repository<FilesVerificationUser>,
     @InjectRepository(Address)
     private readonly addressRepository: Repository<Address>,
     @InjectRepository(Block)
@@ -42,10 +37,7 @@ export class UserService {
     private readonly reportRepository: Repository<Report>,
     @InjectRepository(FavUser)
     private readonly favUserRepository: Repository<FavUser>,
-    @InjectRepository(Verification)
-    private readonly verificationRepository: Repository<Verification>,
     private readonly paginationService: PaginationService,
-    private readonly externalVerificationService: ExternalVerificationService,
     private readonly dataSource: DataSource,
     private readonly jwtService: JwtService,
     private readonly mailsService: MailsService,
@@ -554,79 +546,5 @@ export class UserService {
     await this.userRepository.save(user);
 
     return 'User successfully recovered';
-  }
-
-  async verifyIdentity(userId: string, documents: Express.Multer.File[]) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const user = await this.userRepository.findOne({ where: { id: userId } });
-
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      let fileVerificationImages: FilesVerificationUser[] = [];
-
-      if (documents && documents.length > 0) {
-        fileVerificationImages = await Promise.all(
-          documents.map(async (document) => {
-            const uploadImage = await this.cloudinaryService.uploadFile(
-              document.buffer,
-              'verification-user',
-            );
-
-            const file = queryRunner.manager.create(FilesVerificationUser, {
-              url: uploadImage.url,
-              user,
-            });
-
-            await queryRunner.manager.save(file); 
-            return file;
-          }),
-        );
-      }
-
-      if (!fileVerificationImages || fileVerificationImages.length !== 3) {
-        throw new BadRequestException(
-          'Front, back, and face images are required',
-        );
-      }
-
-      const [file_front, file_back, faceFileUrl] = fileVerificationImages.map(
-        (file) => file.url,
-      );
-
-      const verification = this.verificationRepository.create({
-        user,
-        documentUrls: [file_front, file_back],
-        faceUrl: faceFileUrl,
-        verificationStatus: 'PENDING',
-      });
-
-      await this.verificationRepository.save(verification);
-
-      const externalResponse = await this.externalVerificationService.verify({
-        userId: user.id,
-        documentUrls: verification.documentUrls,
-        faceFileUrl: verification.faceUrl,
-      });
-
-      verification.verificationStatus =
-        externalResponse.status === 'approved' ? 'APPROVED' : 'REJECTED';
-      verification.externalResponse = JSON.stringify(externalResponse);
-
-      await this.verificationRepository.save(verification);
-
-      return verification;
-    } catch (error) {
-      console.error('Error in verifyIdentity:', error);
-      await queryRunner.rollbackTransaction();
-      console.log(error);
-    } finally {
-      await queryRunner.release();
-    }
   }
 }

@@ -11,7 +11,6 @@ import { MessageImageUploadStrategy } from './strategy/message-image-strategy co
 import { MessageVideoUploadStrategy } from './strategy/message-videoUpload-strategy';
 import { MessageAudioUploadStrategy } from './strategy/message-audioUpload-strategy';
 import { IAImageStrategy } from './strategy/ia-image-strategy';
-import { VerificationUserStrategy } from './strategy/verification-user-strategy';
 import { StreamImagePreviewStrategy } from './strategy/stream-image-preview-strategy';
 
 @Module({
@@ -25,7 +24,6 @@ import { StreamImagePreviewStrategy } from './strategy/stream-image-preview-stra
     MessageImageUploadStrategy,
     MessageVideoUploadStrategy,
     MessageAudioUploadStrategy,
-    VerificationUserStrategy,
     StreamImagePreviewStrategy,
     CloudinaryService,
     CloudinaryProvider,
