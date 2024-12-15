@@ -98,6 +98,9 @@ export class PaymentsService {
       body.event_type === 'PAYMENTS.PAYMENT.CREATED'
     ) {
       status = StatusPay.APPROVED;
+
+      user.is_payed = true;
+      await this.userRepository.save(user);
     } else if (body.event_type === 'CHECKOUT.PAYMENT-APPROVAL.REVERSED') {
       status = StatusPay.REJECTED;
     } else {

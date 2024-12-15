@@ -47,6 +47,9 @@ export class User extends BaseUUIDEntity {
   @Column({ type: 'boolean', default: true })
   is_active?: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  is_payed?: boolean;
+
   @Column('simple-json', { nullable: true })
   face_encoding: number[];
 

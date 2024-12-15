@@ -82,7 +82,6 @@ export class MercadopagoWebhookService {
           };
         }
       }
-      this.wsMessageGateway.sendNotification(orderId, 'Payment cancel');
     } else {
       this.wsMessageGateway.sendNotification(orderId, 'Payment cancel');
       throw new ForbiddenException('Unauthorized or canceled payment');

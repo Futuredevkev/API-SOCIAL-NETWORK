@@ -19,7 +19,6 @@ import { MessageImageUploadStrategy } from 'src/cloudinary/strategy/message-imag
 import { MessageAudioUploadStrategy } from 'src/cloudinary/strategy/message-audioUpload-strategy';
 import { ScheduleModule } from '@nestjs/schedule';
 import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
-import { VerificationUserStrategy } from 'src/cloudinary/strategy/verification-user-strategy';
 import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image-preview-strategy';
 
 @Module({
@@ -48,7 +47,6 @@ import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image
     MessageImageUploadStrategy,
     MessageAudioUploadStrategy,
     IAImageStrategy,
-    VerificationUserStrategy,
     StreamImagePreviewStrategy,
   ],
 })

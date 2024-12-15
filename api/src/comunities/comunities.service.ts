@@ -50,6 +50,10 @@ export class ComunitiesService {
       throw new BadRequestException('User not found');
     }
 
+    if (userAuth.is_payed) {
+      throw new BadRequestException('You have already paid');
+    }
+
     const payment = await this.paymentsService.createPayment(userAuth.id, {
       method: method,
       email: email,
