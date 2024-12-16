@@ -84,15 +84,6 @@ export class UserController {
     return this.userService.addAdress(userId, addressUserDto);
   }
 
-  @Post('config/verify-identity')
-  @UseInterceptors(FilesInterceptor('documents', 3, {}))
-  async verifyIdentity(
-    @GetUser('id') userId: string,
-    @UploadedFiles() documents: Express.Multer.File[],
-  ) {
-    return this.userService.verifyIdentity(userId, documents);
-  }
-
   @Delete()
   @HttpCode(HttpStatus.OK)
   remove(@GetUser('id') userId: string) {

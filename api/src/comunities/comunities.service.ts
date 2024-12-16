@@ -44,26 +44,25 @@ export class ComunitiesService {
 
     const userAuth = await this.userRepository.findOne({
       where: { id: userId, is_active: true },
+      relations: ['orders'],
     });
 
     if (!userAuth) {
       throw new BadRequestException('User not found');
     }
 
-    if (userAuth.is_payed) {
-      throw new BadRequestException('You have already paid');
+    const hasApprovedOrder = await this.ordersService.hasRecentApprovedOrder(
+      userAuth.id,
+    );
+
+    if (hasApprovedOrder) {
+      throw new BadRequestException('Ya has pagado la comunidad');
     }
 
     const payment = await this.paymentsService.createPayment(userAuth.id, {
       method: method,
       email: email,
     });
-
-    const orderStatus = await this.ordersService.getOrderStatus(userAuth.id);
-
-    if (orderStatus === StatusPay.APPROVED) {
-      throw new BadRequestException('You have already approved the payment');
-    }
 
     if (payment.approvalUrl) {
       return {
@@ -96,8 +95,6 @@ export class ComunitiesService {
       }
 
       const orderStatus = await this.ordersService.getOrderStatus(userAuth.id);
-
-      console.log(orderStatus);
 
       if (orderStatus !== StatusPay.APPROVED) {
         throw new BadRequestException('Payment not approved');

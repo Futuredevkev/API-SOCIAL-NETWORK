@@ -34,6 +34,13 @@ export class PaymentsService {
       throw new NotFoundException('User not found');
     }
 
+    const hasApprovedOrder =
+      await this.ordersService.hasRecentApprovedOrder(userId);
+
+    if (hasApprovedOrder) {
+      throw new InternalServerErrorException('Ya has pagado la comunidad');
+    }
+
     const description = `Estimado/a ${user.name}, agradecemos sinceramente tu valioso aporte, esperamos que puedas crear una hermosa comunidad de reciclaje, para ayudar al mundo y a la naturaleza.`;
     const status = StatusPay.PENDING;
 
@@ -92,15 +99,23 @@ export class PaymentsService {
 
     let status: StatusPay;
 
-    if (
+    const isPaymentApproved =
       body.event_type === 'CHECKOUT.ORDER.APPROVED' ||
       body.event_type === 'CHECKOUT.ORDER.COMPLETED' ||
-      body.event_type === 'PAYMENTS.PAYMENT.CREATED'
-    ) {
+      (body.event_type === 'PAYMENTS.PAYMENT.CREATED' &&
+        body.resource?.state === 'approved');
+
+    if (isPaymentApproved) {
       status = StatusPay.APPROVED;
 
-      user.is_payed = true;
-      await this.userRepository.save(user);
+     
+      const hasApprovedOrder =
+        await this.ordersService.hasRecentApprovedOrder(userId);
+
+      if (!hasApprovedOrder) {
+        user.is_payed = true;
+        await this.userRepository.save(user);
+      }
     } else if (body.event_type === 'CHECKOUT.PAYMENT-APPROVAL.REVERSED') {
       status = StatusPay.REJECTED;
     } else {

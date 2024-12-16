@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from './entities/order.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { StatusPay } from 'src/enums/enum-status-pay';
 import { PaginationService } from 'src/common/pagination.service';
@@ -72,7 +72,21 @@ export class OrdersService {
       throw new NotFoundException(`No orders found for user with ID ${userId}`);
     }
 
-    return order.status;
+    return order ? order.status : null;
+  }
+
+  async hasRecentApprovedOrder(userId: string): Promise<boolean> {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const recentOrder = await this.ordersRepository.findOne({
+      where: {
+        user: { id: userId },
+        status: StatusPay.APPROVED,
+        created_at: MoreThan(thirtyDaysAgo),
+      },
+    });
+
+    return !!recentOrder;
   }
 
   async findOne(id: string): Promise<Order> {
@@ -87,35 +101,12 @@ export class OrdersService {
     return order;
   }
 
-  async updateOrderPaymentId(
-    orderId: string,
-    paymentId: string,
-  ): Promise<void> {
-    const order = await this.ordersRepository.findOne({
-      where: { id: orderId },
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order with ID ${orderId} not found`);
-    }
-
-    order.paymentId = paymentId;
-    await this.ordersRepository.save(order);
+  async updateOrderStatus(orderId: string, status: StatusPay) {
+    await this.ordersRepository.update(orderId, { status });
   }
 
-  async updateOrderStatus(orderId: string, status: StatusPay): Promise<void> {
-    const order = await this.ordersRepository.findOne({
-      where: { id: orderId },
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order with ID ${orderId} not found`);
-    }
-
-    console.log(
-      `Updating order ${orderId} status from ${order.status} to ${status}`,
-    );
-    order.status = status;
-    await this.ordersRepository.save(order);
+  
+  async updateOrderPaymentId(orderId: string, paymentId: string | null) {
+    await this.ordersRepository.update(orderId, { paymentId });
   }
 }

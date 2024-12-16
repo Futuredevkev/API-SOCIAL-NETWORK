@@ -57,8 +57,8 @@ export class PaypalService {
             },
           ],
           redirect_urls: {
-            return_url: `https://4d0a-2800-a4-1b30-3800-e9e4-3320-1523-2c8.ngrok-free.app/api/v1/payment/transaction/${orderId}/successPaypal`,
-            cancel_url: `https://4d0a-2800-a4-1b30-3800-e9e4-3320-1523-2c8.ngrok-free.app/api/v1/payment/transaction/${orderId}/cancelPaymentPaypal`,
+            return_url: `https://eea2-2800-a4-1a16-e100-5149-a5cb-bcc6-a89a.ngrok-free.app/api/v1/payment/transaction/${orderId}/successPaypal`,
+            cancel_url: `https://eea2-2800-a4-1a16-e100-5149-a5cb-bcc6-a89a.ngrok-free.app/api/v1/payment/transaction/${orderId}/cancelPaymentPaypal`,
           },
         },
         {
@@ -104,13 +104,31 @@ export class PaypalService {
       );
 
       console.log('Respuesta de ejecutar pago:', response.data);
-      return response.data.state === 'approved';
+
+      const isApproved =
+        response.data.state === 'approved' ||
+        (response.data.transactions &&
+          response.data.transactions[0].related_resources[0].sale.state ===
+            'completed');
+
+      return isApproved;
     } catch (error) {
-      console.error(
-        'Error al ejecutar el pago:',
-        error.response?.data || error.message,
+      console.error('Detalles completos del error:', {
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers,
+      });
+
+      if (error.response?.data?.name === 'INVALID_RESOURCE_ID') {
+        console.warn(
+          'ID de recurso inválido, pero el pago puede estar procesado',
+        );
+        return true;
+      }
+
+      throw new InternalServerErrorException(
+        'No se pudo ejecutar el pago: ' + error.message,
       );
-      throw new InternalServerErrorException('No se pudo ejecutar el pago.');
     }
   }
 }
