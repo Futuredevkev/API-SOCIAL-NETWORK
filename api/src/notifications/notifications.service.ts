@@ -1,26 +1,62 @@
 import { Injectable } from '@nestjs/common';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { Notification } from './entities/notification.entity';
+import { NotificationType } from 'src/enums/enum-notifications-type';
 
 @Injectable()
-export class NotificationsService {
-  create(createNotificationDto: CreateNotificationDto) {
-    return 'This action adds a new notification';
+export class NotificationService {
+  constructor(
+    @InjectRepository(Notification)
+    private readonly notificationRepository: Repository<Notification>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+
+  async createNotification(
+    recipientId: string,
+    senderId: string,
+    type: NotificationType,
+    message: string,
+    relatedEntityId: string,
+  ) {
+    const recipient = await this.userRepository.findOne({
+      where: { id: recipientId },
+    });
+
+    const sender = await this.userRepository.findOne({
+      where: { id: senderId },
+    });
+
+    if (!recipient || !sender) {
+      throw new Error('User not found');
+    }
+
+    const notification = this.notificationRepository.create({
+      recipient,
+      sender,
+      type,
+      message,
+      relatedEntityId,
+      isRead: false,
+    });
+
+    return this.notificationRepository.save(notification);
   }
 
-  findAll() {
-    return `This action returns all notifications`;
+  async markNotificationAsRead(notificationId: string) {
+    return this.notificationRepository.update(notificationId, { isRead: true });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} notification`;
-  }
-
-  update(id: number, updateNotificationDto: UpdateNotificationDto) {
-    return `This action updates a #${id} notification`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} notification`;
+  async getUserNotifications(userId: string) {
+    return this.notificationRepository.find({
+      where: {
+        recipient: { id: userId },
+        isRead: false,
+      },
+      relations: ['sender'],
+      order: { created_at: 'DESC' },
+    });
   }
 }

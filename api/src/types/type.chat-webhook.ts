@@ -11,6 +11,7 @@ export interface SendMessagePayload {
   userId: string;
   createChatDto: CreateChatDto;
   files: Express.Multer.File[];
+  receiverId?: string;
 }
 
 export interface EditMessagePayload {

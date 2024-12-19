@@ -11,4 +11,6 @@ export class CreateResponseDto {
   @MinLength(3)
   @IsNotEmpty()
   content: string;
+
+  parentResponseId?: string;
 }

@@ -12,7 +12,7 @@ import { PaginationService } from 'src/common/pagination.service';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { CensorService } from 'src/globalMethods/censor.service';
-
+import { NotificationGateway } from 'src/ws-notifications/ws-notifications.gateway';
 
 @Injectable()
 export class ResponsesService {
@@ -30,6 +30,7 @@ export class ResponsesService {
     private readonly paginationService: PaginationService,
     private readonly dataSource: DataSource,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
   async createResponse(
     userId: string,
@@ -61,6 +62,7 @@ export class ResponsesService {
 
       const comment = await queryRunner.manager.findOne(Comment, {
         where: { id: commentId, is_active: true },
+        relations: ['user'],
       });
 
       if (!comment) {
@@ -69,7 +71,6 @@ export class ResponsesService {
 
       let fileResponse: FileResponse | null = null;
 
-     
       if (image) {
         const imageResponse = await this.cloudinaryService.uploadFile(
           image.buffer,
@@ -89,17 +90,38 @@ export class ResponsesService {
         createResponseDto.content,
       );
 
+      let parentResponse = null;
+      if (createResponseDto.parentResponseId) {
+        parentResponse = await queryRunner.manager.findOne(Response, {
+          where: { id: createResponseDto.parentResponseId, is_active: true },
+        });
+
+        if (parentResponse) {
+          await this.notificationGateway.notifyResponseToResponse(
+            parentResponse.user.id,
+            userAuth.id,
+            parentResponse.id,
+          );
+        }
+      }
+
       const response = queryRunner.manager.create(Response, {
         ...createResponseDto,
         content: censoredContent || createResponseDto.content,
         user: userAuth,
         publication: publication,
         comment: comment,
-        file: fileResponse, 
+        file: fileResponse,
+        parentResponse,
       });
 
       await queryRunner.manager.save(response);
 
+      await this.notificationGateway.notifyResponseToComment(
+        comment.user.id,
+        userAuth.id,
+        comment.id,
+      );
 
       await queryRunner.commitTransaction();
 

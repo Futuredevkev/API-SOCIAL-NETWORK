@@ -21,6 +21,7 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 import * as bcrypt from 'bcrypt';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { PaginationGroupChatService } from 'src/common/pagination-Group.service';
+import { NotificationGateway } from 'src/ws-notifications/ws-notifications.gateway';
 
 @Injectable()
 export class GroupChatService {
@@ -38,6 +39,7 @@ export class GroupChatService {
     private readonly dataSource: DataSource,
     private readonly cloudinaryService: CloudinaryService,
     private readonly paginationGroupChatService: PaginationGroupChatService,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
   async createGroup(
     createGroupChatDto: CreateGroupChatDto,
@@ -91,6 +93,14 @@ export class GroupChatService {
 
     await this.groupUserRepository.save(groupUsers);
 
+    const memberIds = members.map((member) => member.id);
+    await this.notificationGateway.notifyGroupCreated(
+      authUser.id,
+      memberIds,
+      groupChat.name,
+      groupChat.id,
+    );
+
     return {
       groupChat,
       groupUsers,
@@ -141,6 +151,14 @@ export class GroupChatService {
     }
 
     await this.groupChatRepository.save(updatedGroup);
+
+    const groupUserIds = group.groupUsers.map((gu) => gu.user.id);
+    await this.notificationGateway.notifyGroupEdited(
+      group.id,
+      userAuth.id,
+      groupUserIds,
+      group.name,
+    );
 
     return { message: 'Group updated successfully' };
   }
@@ -210,6 +228,13 @@ export class GroupChatService {
       });
       console.log('Saving new group user:', groupUser);
       await this.groupUserRepository.save(groupUser);
+
+      await this.notificationGateway.notifyGroupMemberAdded(
+        group.id,
+        authUser.id,
+        member.id,
+        group.name,
+      );
     }
 
     return { message: 'Members added successfully' };
@@ -264,6 +289,13 @@ export class GroupChatService {
     for (const member of membersToRemove) {
       console.log('Eliminando miembro:', member);
       await this.groupUserRepository.remove(member);
+
+      await this.notificationGateway.notifyGroupMemberRemoved(
+        group.id,
+        userAuth.id,
+        member.user.id,
+        group.name,
+      );
     }
 
     return { message: 'Members removed successfully' };
@@ -408,6 +440,14 @@ export class GroupChatService {
 
     await this.groupChatRepository.save(groupToDelete);
 
+    const groupUserIds = group.groupUsers.map((gu) => gu.user.id);
+    await this.notificationGateway.notifyGroupDeleted(
+      group.id,
+      userAuth.id,
+      groupUserIds,
+      group.name,
+    );
+
     return { message: 'Group deleted successfully' };
   }
 
@@ -447,6 +487,12 @@ export class GroupChatService {
     }
 
     await this.groupUserRepository.remove(groupUser);
+
+    await this.notificationGateway.notifyYourselfGroupMemberRemoved(
+      group.id,
+      userAuth.id,
+      group.name, 
+    );
 
     return { message: 'You have left the group successfully' };
   }
@@ -526,6 +572,15 @@ export class GroupChatService {
       });
 
       await queryRunner.manager.save(GroupMessage, message);
+
+      const groupUserIds = group.groupUsers.map((gu) => gu.user.id);
+      await this.notificationGateway.notifyNewGroupMessage(
+        group.id,
+        userId,
+        createMessageDto.content,
+        groupUserIds,
+      );
+
       await queryRunner.commitTransaction();
 
       return { message: 'Message sent successfully' };
@@ -596,6 +651,14 @@ export class GroupChatService {
     });
 
     await this.groupMessageRepository.save(deletedMessage);
+
+    const groupUserIds = group.groupUsers.map((gu) => gu.user.id);
+    await this.notificationGateway.notifyGroupMessageDeleted(
+      group.id,
+      authUser.id,
+      groupUserIds,
+      message.id,
+    );
 
     return { message: 'Message deleted successfully' };
   }
@@ -839,6 +902,15 @@ export class GroupChatService {
       }
 
       await queryRunner.manager.save(updatedMessageGroup);
+
+      const groupUserIds = group.groupUsers.map((gu) => gu.user.id);
+      await this.notificationGateway.notifyGroupMessageEdited(
+        group.id,
+        userAuth.id,
+        groupUserIds,
+        message.id,
+      );
+
       await queryRunner.commitTransaction();
 
       return { message: 'Message updated successfully' };

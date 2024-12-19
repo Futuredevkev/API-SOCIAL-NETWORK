@@ -12,6 +12,7 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { CommunityRoles } from 'src/enums/enum.communities.roles';
 import { CensorService } from 'src/globalMethods/censor.service';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { NotificationGateway } from 'src/ws-notifications/ws-notifications.gateway';
 
 @Injectable()
 export class EventsService {
@@ -27,6 +28,7 @@ export class EventsService {
     private readonly fileEventRepository: Repository<FileEvent>,
     private readonly paginationService: PaginationService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
   async createEvent(
     userId: string,
@@ -110,6 +112,14 @@ export class EventsService {
     });
 
     await this.eventRepository.save(event);
+
+    const membersId = community.userCommunities.map((user) => user.user.id);
+    await this.notificationGateway.notifyEventCommunityCreated(
+      community.id,
+      membersId,
+      event.id,
+      userAuth.id,
+    );
 
     return { message: 'Event created' };
   }
@@ -217,6 +227,14 @@ export class EventsService {
     });
 
     await this.eventRepository.save(updatedEvent);
+
+    const members = community.userCommunities.map((user) => user.user.id);
+    await this.notificationGateway.notifyEventCommunityEdited(
+      community.id,
+      members,
+      event.id,
+      userAuth.id,
+    );
 
     return { message: 'Event updated' };
   }
@@ -425,6 +443,15 @@ export class EventsService {
     });
 
     await this.eventRepository.save(eventDeleted);
+
+    const members = community.userCommunities.map((user) => user.user.id);
+
+    await this.notificationGateway.notifyEventCommunityRemoved(
+      community.id,
+      members,
+      event.id,
+      userAuth.id,
+    );
 
     return {
       message: 'Event deleted successfully',

@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import { ChangeLike } from './entities/changeLike.entity';
 import { Publication } from 'src/publication/entities/publication.entity';
 import { User } from 'src/user/entities/user.entity';
-
+import { NotificationGateway } from 'src/ws-notifications/ws-notifications.gateway';
 
 @Injectable()
 export class LikeService {
@@ -22,6 +22,7 @@ export class LikeService {
     private readonly publicationRepository: Repository<Publication>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
   async needLike(userId: string, publicationId: string) {
     const userAuth = await this.userRepository.findOne({
@@ -63,6 +64,11 @@ export class LikeService {
 
     await this.needLikeRepository.save(needLike);
 
+    await this.notificationGateway.notifyLikeUser(
+      needLike.publication.user.id,
+      userAuth.id,
+      needLike.publication.id,
+    );
 
     return { message: 'Need Like created' };
   }
@@ -106,6 +112,12 @@ export class LikeService {
     }
 
     await this.changeLikeRepository.save(changeLike);
+
+    await this.notificationGateway.notifyLikeUser(
+      changeLike.publication.user.id,
+      userAuth.id,
+      changeLike.publication.id,
+    );
 
     return { message: 'Change Like created' };
   }

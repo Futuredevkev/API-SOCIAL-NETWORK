@@ -18,6 +18,7 @@ import { CensorService } from 'src/globalMethods/censor.service';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { createRoleDto } from './dto/create-role.dto';
 
+
 @Injectable()
 export class ComunitiesService {
   constructor(
@@ -518,6 +519,60 @@ export class ComunitiesService {
     return {
       message: 'User removed from community',
     };
+  }
+
+  async leaveCommunity(userId: string, communityId: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const userAuth = await queryRunner.manager.findOne(User, {
+        where: { id: userId, is_active: true },
+      });
+
+      if (!userAuth) {
+        throw new BadRequestException('User not found');
+      }
+
+      const community = await queryRunner.manager.findOne(Community, {
+        where: { id: communityId, is_active: true },
+        relations: ['userCommunities', 'userCommunities.user'],
+      });
+
+      if (!community) {
+        throw new BadRequestException('Community not found');
+      }
+
+      const userCommunity = community.userCommunities.find(
+        (uc) => uc.user.id === userAuth.id,
+      );
+
+      if (!userCommunity) {
+        throw new BadRequestException('User is not a member of this community');
+      }
+
+     
+      if (
+        userCommunity.role === CommunityRoles.ADMINGROUP &&
+        community.user.id === userAuth.id
+      ) {
+        throw new BadRequestException('Main admin cannot leave the community');
+      }
+
+      await queryRunner.manager.remove(userCommunity);
+      
+      await queryRunner.commitTransaction();
+
+      return {
+        message: 'Successfully left the community',
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async addRoleToUser(

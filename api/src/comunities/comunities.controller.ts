@@ -133,6 +133,14 @@ export class ComunitiesController {
     );
   }
 
+  @Delete('leaveCommunity/:communityId')
+  leaveCommunity(
+    @GetUser('id') userId: string,
+    @Param('communityId') communityId: string,
+  ) {
+    return this.comunitiesService.leaveCommunity(userId, communityId);
+  }
+
   @Get(':communityId/users/admins')
   async findAdminsOfCommunity(
     @GetUser('id') userId: string,

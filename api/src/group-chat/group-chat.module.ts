@@ -20,6 +20,9 @@ import { MessageAudioUploadStrategy } from 'src/cloudinary/strategy/message-audi
 import { PaginationGroupChatService } from 'src/common/pagination-Group.service';
 import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
 import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image-preview-strategy';
+import { NotificationGateway } from 'src/ws-notifications/ws-notifications.gateway';
+import { NotificationsModule } from 'src/notifications/notifications.module';
+import { WsNotificationModule } from 'src/ws-notifications/ws-notification-module';
 
 @Module({
   imports: [
@@ -30,6 +33,8 @@ import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image
       FileGroup,
       GroupUser,
     ]),
+    NotificationsModule,
+    WsNotificationModule,
   ],
   controllers: [GroupChatController],
   providers: [
@@ -47,6 +52,7 @@ import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image
     MessageAudioUploadStrategy,
     IAImageStrategy,
     StreamImagePreviewStrategy,
+    NotificationGateway,
   ],
   exports: [GroupChatService],
 })

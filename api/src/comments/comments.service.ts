@@ -11,7 +11,7 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { FileComment } from './entities/file-comment.entity';
 import { CensorService } from 'src/globalMethods/censor.service';
-
+import { NotificationGateway } from 'src/ws-notifications/ws-notifications.gateway';
 
 @Injectable()
 export class CommentsService {
@@ -27,6 +27,7 @@ export class CommentsService {
     private readonly paginationService: PaginationService,
     private readonly dataSource: DataSource,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
   async createComment(
     userId: string,
@@ -86,6 +87,12 @@ export class CommentsService {
       });
 
       await queryRunner.manager.save(comment);
+
+      await this.notificationGateway.notifyCommentOnPublication(
+        publication.user.id,
+        userAuth.id,
+        publication.id,
+      );
 
       await queryRunner.commitTransaction();
 

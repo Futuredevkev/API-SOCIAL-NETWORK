@@ -20,11 +20,16 @@ import { MessageAudioUploadStrategy } from 'src/cloudinary/strategy/message-audi
 import { ScheduleModule } from '@nestjs/schedule';
 import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
 import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image-preview-strategy';
+import { NotificationGateway } from 'src/ws-notifications/ws-notifications.gateway';
+import { NotificationsModule } from 'src/notifications/notifications.module';
+import { WsNotificationModule } from 'src/ws-notifications/ws-notification-module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     TypeOrmModule.forFeature([Event, User, Community, FileEvent]),
+    NotificationsModule,
+    WsNotificationModule,
   ],
   controllers: [EventsController],
   providers: [
@@ -48,6 +53,7 @@ import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image
     MessageAudioUploadStrategy,
     IAImageStrategy,
     StreamImagePreviewStrategy,
+    NotificationGateway,
   ],
 })
 export class EventsModule {}

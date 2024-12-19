@@ -18,6 +18,7 @@ import { LikeMessage } from './entities/likeMessage.entity';
 import * as bcrypt from 'bcrypt';
 import { PaginationChatService } from '../common/pagination-Chat.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { NotificationGateway } from 'src/ws-notifications/ws-notifications.gateway';
 
 @Injectable()
 export class ChatService {
@@ -35,6 +36,7 @@ export class ChatService {
     private readonly dataSource: DataSource,
     private readonly cloudinaryService: CloudinaryService,
     private readonly paginationChatService: PaginationChatService,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
 
   async createChat(userId: string, receiverId: string): Promise<Chat> {
@@ -145,6 +147,13 @@ export class ChatService {
 
       await this.messageRepository.save(newMessage);
       await queryRunner.commitTransaction();
+
+      await this.notificationGateway.notifyNewMessage(
+        chat.receiver.id,
+        userId,
+        chat.id,
+        content,
+      );
 
       return newMessage;
     } catch (error) {
@@ -263,6 +272,13 @@ export class ChatService {
       await queryRunner.manager.save(updatedMessage);
       await queryRunner.commitTransaction();
 
+      await this.notificationGateway.notifyMessageEdited(
+        message.receiver.id,
+        userId,
+        chat.id,
+        message.id,
+      );
+
       return updatedMessage;
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -327,6 +343,13 @@ export class ChatService {
     });
 
     await this.messageRepository.save(eliminatedMessage);
+
+     await this.notificationGateway.notifyMessageDeleted(
+       message.receiver.id,
+       user.id,
+       chat.id,
+       message.id,
+     );
 
     return { message: 'Message deleted' };
   }
@@ -662,13 +685,14 @@ export class ChatService {
   }
 
   async markAsRead(messageId: string, userId: string): Promise<Message> {
-    
-    const userReceptorMessage = await this.userRepository.findOne({ where: { id: userId } });
+    const userReceptorMessage = await this.userRepository.findOne({
+      where: { id: userId },
+    });
 
     if (!userReceptorMessage) {
       throw new NotFoundException(`User with id ${userId} not found`);
     }
-    
+
     const message = await this.messageRepository.findOne({
       where: { id: messageId, is_active: true },
       relations: ['receiver'],
@@ -677,13 +701,12 @@ export class ChatService {
     if (!message) {
       throw new NotFoundException(`Message with id ${messageId} not found`);
     }
-    
-    if(message.receiver.id !== userReceptorMessage.id) {
+
+    if (message.receiver.id !== userReceptorMessage.id) {
       throw new UnauthorizedException(
         `You don't have permission to mark this message as read`,
       );
     }
-
 
     const messageIsRead = await this.messageRepository.preload({
       id: message.id,
@@ -712,6 +735,12 @@ export class ChatService {
 
     const like = this.likeRepository.create({ user, message });
     await this.likeRepository.save(like);
+
+     await this.notificationGateway.notifyMessageLiked(
+       message.sender.id,
+       user.id,
+       message.id,
+     );
 
     return message;
   }

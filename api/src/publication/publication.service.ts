@@ -19,6 +19,7 @@ import { penalizedWords } from 'src/enums/enum.penalizes';
 import { UbicationService } from 'src/globalMethods/ubication.service';
 import { FilePublication } from './entities/filePublication.entity';
 import { Community } from 'src/comunities/entities/comunity.entity';
+
 @Injectable()
 export class PublicationService {
   constructor(
