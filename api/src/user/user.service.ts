@@ -109,7 +109,7 @@ export class UserService {
         blocksReceived: { blockedUser: { id: true, name: true } },
         stars: { stars: true },
       },
-    });
+    }); 
 
     if (!user) {
       throw new NotFoundException('User not found');

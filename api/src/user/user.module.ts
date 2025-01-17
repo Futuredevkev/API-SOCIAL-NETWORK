@@ -24,7 +24,6 @@ import { MessageImageUploadStrategy } from 'src/cloudinary/strategy/message-imag
 import { MessageAudioUploadStrategy } from 'src/cloudinary/strategy/message-audioUpload-strategy';
 import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
 import { FavUser } from './entities/fav_user.entity';
-import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image-preview-strategy';
 
 @Module({
   imports: [
@@ -62,7 +61,6 @@ import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image
     MessageImageUploadStrategy,
     MessageAudioUploadStrategy,
     IAImageStrategy,
-    StreamImagePreviewStrategy,
   ],
   exports: [UserService],
 })

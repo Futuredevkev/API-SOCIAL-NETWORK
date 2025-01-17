@@ -19,7 +19,6 @@ import { MessageImageUploadStrategy } from 'src/cloudinary/strategy/message-imag
 import { MessageAudioUploadStrategy } from 'src/cloudinary/strategy/message-audioUpload-strategy';
 import { PaginationGroupChatService } from 'src/common/pagination-Group.service';
 import { IAImageStrategy } from 'src/cloudinary/strategy/ia-image-strategy';
-import { StreamImagePreviewStrategy } from 'src/cloudinary/strategy/stream-image-preview-strategy';
 import { NotificationGateway } from 'src/ws-notifications/ws-notifications.gateway';
 import { NotificationsModule } from 'src/notifications/notifications.module';
 import { WsNotificationModule } from 'src/ws-notifications/ws-notification-module';
@@ -51,7 +50,6 @@ import { WsNotificationModule } from 'src/ws-notifications/ws-notification-modul
     MessageImageUploadStrategy,
     MessageAudioUploadStrategy,
     IAImageStrategy,
-    StreamImagePreviewStrategy,
     NotificationGateway,
   ],
   exports: [GroupChatService],
